@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Python 脚本解析 ipa 文件 – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="def plist(self):
+
+
+
+" />
+    <meta property="og:description" content="def plist(self):
+
+
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="Python 脚本解析 ipa 文件" />
+    <meta property="twitter:title" content="Python 脚本解析 ipa 文件" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>Python 脚本解析 ipa 文件</h1>
+
+  <div class="entry">
+    <div class="highlighter-rouge"><pre class="highlight"><code>def plist(self):
+
+	if self.__plist:
+		return self.__plist
+
+	# 没有缓存的 plist 文件，需要解析并缓存
+	ipa = zipfile.ZipFile(self.__ipapath)
+
+	for info in ipa.infolist():
+		# 查找 Info.Plist 文件，格式如下：
+		# Payload/xxx.app/Info.plist
+		if re.match('^Payload/(?:.*)\.app/Info.plist$', info.filename):
+			# 解压文件到临时路径
+			tmppath = os.path.join(tempfile.gettempdir(), os.urandom(5))
+			ipa.extract(info, tmppath)
+
+			# 解析 plist 文件
+			plistpath = os.path.join(tmppath, info.filename)
+			self.__plist = biplist.readPlist(plistpath)
+
+			# 删除 plist 文件
+			shutil.rmtree(tmppath)
+
+			break
+
+	return self.__plist
+</code></pre>
+</div>
+
+<p>完整的实现可以查看这个 gist: <a href="https://gist.github.com/6david9/a544863c53adeeae7594">https://gist.github.com/6david9/a544863c53adeeae7594</a></p>
+
+  </div>
+
+  <div class="date">
+    Written on April  1, 2015
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

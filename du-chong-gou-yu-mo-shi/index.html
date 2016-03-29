@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>读《重构与模式》 – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="过度设计：是指代码的灵活性和复杂性超出所需。
+
+" />
+    <meta property="og:description" content="过度设计：是指代码的灵活性和复杂性超出所需。
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="读《重构与模式》" />
+    <meta property="twitter:title" content="读《重构与模式》" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>读《重构与模式》</h1>
+
+  <div class="entry">
+    <p><strong>过度设计</strong>：是指代码的灵活性和复杂性超出所需。</p>
+
+<p><strong>设计不足</strong>：是指所开发的软件设计不良。其产生原因有如下几种：<br />
+* 程序员没有时间，没有抽出事件，或者事件不允许进行重构；<br />
+* 程序员在何为好的软件设计方面知识不足；<br />
+* 程序员被要求在既有系统中快速地添加新功能；<br />
+* 程序员被迫同时进行太多项目；</p>
+
+<p><strong>Big Ball of Mud（大泥球）</strong>:<br />
+    数据结构的构造非常随意，甚至近乎不存在。任何东西都要与其他东西通信。所有重要的状态数据都可能是全局的。在状态信息被隔开的地方，需要通过错综复杂的后段通道杂乱地传递，以绕开系统的原有结构。<br />
+    变量名和函数名信息量不足，甚至会起误导作用。函数可能使用大量全局变量以及定义模糊的冗长的参数列表。函数本身冗长、费解，完成多项毫无关联的任务。代码重复很多。控制流很难看清，难以找到来龙去脉。程序员的意图几乎无法理解。代码完全不可读，近乎难以破译的天书。代码中有许多经过多个维护者之手不断修修补补留下的明显印记，这些维护者几乎都没有理解自己的修补会造成怎样的后果。</p>
+
+<p><strong>长期的设计不足，会使软件开发节奏变成“快、慢、更慢”</strong>，可能造成这样的后果：<br />
+(1) 系统的 1.0 版很快就交付了，但是代码质量很差；<br />
+(2) 系统的 2.0 版本也交付了，但质量低劣的代码使我们慢了下来；<br />
+(3) 在企图交付未来版本时，随着劣质代码的倍增，开发速度也越来越慢，最后人们对系统、程序员乃至使大家陷于这种境地的整个过程都失去了信心；<br />
+(4) 到了 4.0 版时或者之后，我们意识到这样肯定不行，开始考虑推倒重来。</p>
+
+<p><strong>重构</strong>:<br />
+是一种对软件内部结构的改善，目的是在不改变软件的可见行为的情况下，使其更易理解，修改成本更低。</p>
+
+<p><strong>设计欠帐</strong><br />
+  用金融术语来说，如果不偿还债务，就会产生滞纳金。如果不偿还滞纳金，滞纳金就会越积越多。为偿还的滞纳金越大，滞纳金和要付的钱就越多。这可是按复利计算的，而且随着时间推移，还清这些欠帐就变成不可实现的梦。<strong><em>设计欠帐</em></strong>也是如此。</p>
+
+<p><strong>设计痴迷</strong>:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>public interface MessageStrategy {
+	public void sendMessage();
+}
+
+public abstract class AbstractStrategyFactory {
+	public abstract MessageStrategy createStrategy(MessageBody mb);
+}
+
+public class MessageBody {
+	Object payload;
+	public Object getPayload() {
+		return payload;
+	}
+	public void configure(Object obj) {
+		payload = obj;
+	}
+	public void send(MessageStrategy ms) {
+		ms.sendMessage();
+	}
+}
+
+public class DefaultFactory extends AbstractStrategyFactory {
+	private DefaultFactory() {
+		;
+	}
+	static DefaultFactory instance;
+	public static AbstractStrategyFactory getInstance() {
+	if (instance==null) instance = new DefaultFactory();
+		return instance;
+	}
+
+	public MessageStrategy createStrategy(final MessageBody mb) {
+		return new MessageStrategy() {
+			MessageBody body = mb;
+			public void sendMessage() {
+				Object obj = body.getPayload();
+				System.out.println((String)obj);
+			}
+		};
+	}
+}
+
+public class HelloWorld {
+	public static void main(String[] args) {
+		MessageBody mb = new MessageBody();
+		mb.configure("Hello World!");
+		AbstractStrategyFactory asf = DefaultFactory.getInstance();
+		MessageStrategy strategy = asf.createStrategy(mb);
+		mb.send(strategy);
+	}
+}
+</code></pre>
+</div>
+
+  </div>
+
+  <div class="date">
+    Written on December  1, 2013
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

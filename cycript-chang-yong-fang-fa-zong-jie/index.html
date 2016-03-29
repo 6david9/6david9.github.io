@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Cycript 常用方法总结 – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="Cycript 内部使用 readline 处理命令行的交互
+
+" />
+    <meta property="og:description" content="Cycript 内部使用 readline 处理命令行的交互
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="Cycript 常用方法总结" />
+    <meta property="twitter:title" content="Cycript 常用方法总结" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>Cycript 常用方法总结</h1>
+
+  <div class="entry">
+    <h1 id="cycript--readline-">Cycript 内部使用 readline 处理命令行的交互</h1>
+
+<p>ctl + c 取消（cancel）一个方法<br />
+ctrl + d 退出 cycript 或者用 ?exit</p>
+
+<h1 id="cyoncycript-object-notation--">CYON（Cycript Object Notation） 和 ？命令</h1>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>?syntax 切换语法高亮  
+?exit 退出 cycript  
+?expand 切换字符串打印方法，对于 \n 这样的字符是否解析成换行。?expand to toggle the behavior of whether the console attempts to print string syntax or string values.  
+?debug 切换显示 crcript 的解析处理过程  
+?gc 或者 gc() 强制触发 javascript 的垃圾回收机制  
+</code></pre>
+</div>
+
+<h1 id="tab-">tab 补全</h1>
+
+<h1 id="classmessages-">Class.messages 返回该类的所有方法</h1>
+
+<h1 id="instanceconstructor-">(instance).constructor 返回该实例的类</h1>
+
+<h1 id="section">为类添加方法</h1>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>NSNumber.prototype.add5 = function() { return this + 5; }
+</code></pre>
+</div>
+
+<h1 id="ivar">访问 ivar</h1>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>c = [[UIApp windows][0] contentView]
+
+c-&gt;_subviewCache
+
+*c // 显示所有 ivar, 包括私有的
+</code></pre>
+</div>
+
+<h1 id="section-1">异常处理</h1>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>var a; 
+
+try { 
+	[@[0] setObject:nil atIndex:0]; 
+} catch (e) { 
+	a = e; 
+	throw e;
+}
+</code></pre>
+</div>
+
+<h1 id="section-2">获取方法签名</h1>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>NSObject.messages[@selector(description)].type  
+@selector(description).type(NSObject)     // @encode(id(id,SEL))
+</code></pre>
+</div>
+
+<h1 id="category">Category</h1>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="k">@implementation</span> <span class="nc">NSObject</span> <span class="p">(</span><span class="nl">MyCategory</span><span class="p">)</span>  
+<span class="err">-</span> <span class="nc">description</span> <span class="p">{</span> <span class="k">return</span> <span class="s">"hello"</span><span class="p">;</span> <span class="p">}</span>     <span class="c1">// 覆盖已有的方法不需要指明返回值和参数  
+</span><span class="o">-</span> <span class="p">(</span><span class="kt">double</span><span class="p">)</span> <span class="n">f</span><span class="o">:</span><span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">v</span>  <span class="p">{</span> <span class="k">return</span> <span class="n">v</span> <span class="o">*</span> <span class="mi">0</span><span class="p">.</span><span class="mi">5</span><span class="p">;</span> <span class="p">}</span> <span class="c1">// 定义新方法需要指明返回值和参数  
+</span><span class="k">@end</span>
+
+<span class="n">o</span> <span class="o">=</span> <span class="p">[</span><span class="n">new</span> <span class="n">NSObject</span> <span class="nf">init</span><span class="p">]</span>          <span class="c1">// "hello"  
+</span><span class="p">[</span><span class="n">o</span> <span class="nf">f</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span>    <span class="c1">// 1.5 
+</span></code></pre>
+</div>
+
+<h1 id="section-3">创建一个类</h1>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="k">@implementation</span> <span class="nc">A</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="p">{</span>  
+	 <span class="kt">int</span> <span class="n">field</span><span class="p">;</span>  
+<span class="p">}</span>  
+<span class="o">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span> <span class="n">message</span> <span class="p">{</span> <span class="k">return</span> <span class="n">this</span><span class="o">-&gt;</span><span class="n">field</span><span class="p">;</span> <span class="p">}</span>  
+<span class="k">@end</span> 
+</code></pre>
+</div>
+
+  </div>
+
+  <div class="date">
+    Written on March  2, 2014
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>【译】Objective-C 中的 meta-class 是什么？ – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="原文地址
+
+在这篇文章中，我关注的是 Objective-C 中的一个陌生的概念—— meta-class。在 Objective-C 中的每个类都有一个相关联的 meta-class，但是你很少会直接使用 meta-class，他们仍旧保持着神秘的面纱。我们从在运行时创建一个类开始。通过查看 “class pair”，我会解释 meta-class 是什么，同时也会谈谈在 Objective-C 中的对象或者类相关的一些一般主题。
+
+" />
+    <meta property="og:description" content="原文地址
+
+在这篇文章中，我关注的是 Objective-C 中的一个陌生的概念—— meta-class。在 Objective-C 中的每个类都有一个相关联的 meta-class，但是你很少会直接使用 meta-class，他们仍旧保持着神秘的面纱。我们从在运行时创建一个类开始。通过查看 “class pair”，我会解释 meta-class 是什么，同时也会谈谈在 Objective-C 中的对象或者类相关的一些一般主题。
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="【译】Objective-C 中的 meta-class 是什么？" />
+    <meta property="twitter:title" content="【译】Objective-C 中的 meta-class 是什么？" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>【译】Objective-C 中的 meta-class 是什么？</h1>
+
+  <div class="entry">
+    <p><a href="http://www.cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html">原文地址</a></p>
+
+<p>在这篇文章中，我关注的是 Objective-C 中的一个陌生的概念—— meta-class。在 Objective-C 中的每个类都有一个相关联的 meta-class，但是你很少会直接使用 meta-class，他们仍旧保持着神秘的面纱。我们从在运行时创建一个类开始。通过查看 “class pair”，我会解释 meta-class 是什么，同时也会谈谈在 Objective-C 中的对象或者类相关的一些一般主题。</p>
+
+<h2 id="section">在运行时创建一个类</h2>
+<p>下面的代码在运行时创建了一个 NSError 的子类同时为它添加了一个方法：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Class newClass =
+	objc_allocateClassPair([NSError class], "RuntimeErrorSubclass", 0);
+class_addMethod(newClass, @selector(report), (IMP)ReportFunction, "v@:");
+objc_registerClassPair(newClass);
+</code></pre>
+</div>
+
+<p>添加的方法使用叫 ReportFunction 的函数作为实现，定义如下：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>void ReportFunction(id self, SEL _cmd)
+{
+	NSLog(@"This object is %p.", self);
+	NSLog(@"Class is %@, and super is %@.", [self class], [self superclass]);
+
+	Class currentClass = [self class];
+	for (int i = 1; i &lt; 5; i++)
+	{
+		NSLog(@"Following the isa pointer %d times gives %p", i, currentClass);
+		currentClass = object_getClass(currentClass);
+	}
+
+	NSLog(@"NSObject's class is %p", [NSObject class]);
+	NSLog(@"NSObject's meta class is %p", object_getClass([NSObject class]));
+} 
+</code></pre>
+</div>
+
+<p>表面上来看，非常简单。在运行时创建一个类只需要这三步：</p>
+
+<p>1、为 “class pair” 创建存储空间（使用 objc_allocateClassPair）。<br />
+2、为这个类添加所需的 methods 和 ivars（我已经使用 class_addMethod 添加过一个方法了）。<br />
+3、注册这个类，然后就可以使用了（使用 objc_registerClassPair）。</p>
+
+<p>然后，中级问题是：“class pair” 是什么？函数 objc_allocateClassPair 只返回了一个值：这个 class。这一对中的另一个在哪？（译注：pair 有 “一对，一双” 的意思）</p>
+
+<p>我敢肯定你已经猜到了另一半就是 meta-class（就是这篇文章的标题），但是要解释那是什么和你为什么需要它，我需要介绍一些在 Objective-C 中的关于对象和类的背景知识。</p>
+
+<h2 id="section-1">把一个数据结构变为对象需要什么？</h2>
+<p>每个对象都有一个类。这是面相对象概念的基础知识，但在 Objective-C 中不是这样，它（译注：class）同样是这个数据的一部分。每个可以被当成对象的数据结构都在恰当的位置有一个指向一个类的指针。</p>
+
+<p>在 Objective-C，一个对象的类由它的 isa 指针决定。isa 指针指向这个对象的 Class。</p>
+
+<p>事实上，在 Objective-C 中的对象的定义看起来像这样：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>typedef struct objc_object {
+	Class isa;
+} *id;
+</code></pre>
+</div>
+
+<p>这就是说：任何结构体只要以一个指向 Class 结构的指针开始的就可以被当成是 objc_object。</p>
+
+<p>在 Objective-C 中的对象的一个重要的特性是，你可以向它们发送消息：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[@"stringValue"
+	writeToFile:@"/file.txt" atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+</code></pre>
+</div>
+
+<p>你可以这么做是因为，当你向一个 Objective-C 的对象（像这里的 NSCFString）发送消息的时候，runtime 沿着对象的 isa 指针找到了这个对象的 Class（这里是 NSCFString 的类）结构体。 Class 结构体中包含了一个这个类的方法列表和一个指向父类的指针，用于查找继承的方法。</p>
+
+<p>关键点是 Class 结构体中定义了你可以向一个对象发送的消息。</p>
+
+<h2 id="meta-class-">meta-class 是什么？</h2>
+<p>现在，你可能已经知道，在 Objective-C 中一个 Class 也是一个对象。这就意味着你也可以向一个 Class 发送消息。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>NSStringEncoding defaultStringEncoding = [NSString defaultStringEncoding];
+</code></pre>
+</div>
+
+<p>这里，向 NSString 类发送了 defaultStringEncoding。</p>
+
+<p>可以这么做是因为在 Objective-C 中每个 Class 它自己同样也是个对象。也就是说 Class 结构体必须以 isa 指针开始，然后就可以在二进制兼容（binary compatible）我上面介绍的 objc_object 结构了，接着下一个字段必须是一个指向它的父类的指针（要是类就是基类就是 nil）。</p>
+
+<p><a href="http://cocoawithlove.com/2010/01/getting-subclasses-of-objective-c-class.html">我上周已经介绍过</a>，定义一个类有好几种方法，主要依赖于你正在运行的 runtime 的版本。但，是的，都是由一个 isa 字段开始然后是 superclass 字段。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>typedef struct objc_class *Class;
+struct objc_class {
+	Class isa;
+	Class super_class;
+	/* 以下依赖于 runtime 的具体实现 …… */
+};
+</code></pre>
+</div>
+
+<p>然而，为了让我们在 Class 上调用一个方法，Class 的 isa 指针必须指向一个 Class 结构体，并且那个 Class 结构体必须包含我们可以在那个 Class 上调用的方法的列表。</p>
+
+<p>这就引出了 meta-class 的定义：meta-class 是 Class 对象的类（the meta-class is the class for a Class object）。</p>
+
+<p>简单来说：</p>
+
+<ul>
+  <li>当你向一个对象发送消息，就在那个对象的方法列表中查找那个消息。</li>
+  <li>当你想一个类发送消息，就再那个类的 meta-class 中查找那个消息。</li>
+</ul>
+
+<p>meta-class 是必须的，因为它为一个 Class 存储类方法。每个类都必须有一个唯一的 meta-class，因为每个 Class 都有一个可能不一样的类方法。</p>
+
+<h2 id="meta-class--1">meta-class 的类是什么？</h2>
+<p>meta-class，如之前的 Class，同样是个对象。这就意味着你也可以在它上面调用方法。自然的，这就意味着它也必须有一个类（译注：isa 指针）。</p>
+
+<p>所有的 meta-class 使用它们基类的 meta-class （继承层次中最顶层的 Class 的 meta-class）作为它们自己的类。这就是说所有继承自 NSObject 的类（大部分的类），以 NSObject 的 meta-class 作为自己的 meta-class 的类。</p>
+
+<p>遵循这个规则，所有的 meta-class 使用基类的 meta-class 作为他们的类，任何基类的 meta-class 将会是他们自己（它们的 isa 指向他们自己）。这就是说 NSObject 的 meta-class 的 isa 指针指向它们自己（是自己的一个实例）。</p>
+
+<h2 id="class--meta-class-">class 和 meta-class 的继承</h2>
+<p>和 Class 以 super_class  指针指向它的父类的方法一样，meta-class 以 super_class  指针指向 Class 的 super_class 的 meta-class。（译注：这句话有点绕，就是 super-class 一个指向 Class 的父类，一个指向 meta-class 的父类。Class 是一般对象的类型，meta-class 是 Class 的类型。）</p>
+
+<p>进一步来讲，基类的 meta-class 设置 super_class 指针指向基类自己。</p>
+
+<p>这个继承层次的结果就是，所有在这个继承层次中的的实例，类和 meta-class 都继承了基类的层次。</p>
+
+<p>对于所有在 NSObject 层次中的实例，类和 meta-class，这就意味着所有 NSObject 的实例方法都是有效的。对于类和 meta-class，所有 NSObject 的类方法也同样是有效的。</p>
+
+<p>所有这些在字面上相当让人困惑。Greg Parker 已经把实例，类，meta-class 还有他们的超类以非常棒的图解的方式聚合在一起，展示他们是如何在一起工作的。</p>
+
+<h2 id="section-2">用实验验证这点</h2>
+<p>为了验证这些，让我们看看在我文章开头提供的 ReportFunction 的输出。这个函数的目的是顺着 isa 指针打引出它找到的。</p>
+
+<p>要运行 ReportFunction，我们需要为这个动态创建的类创建一个实例，然后在上面调用这个方法。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>id instanceOfNewClass =
+	[[newClass alloc] initWithDomain:@"someDomain" code:0 userInfo:nil];
+[instanceOfNewClass performSelector:@selector(report)];
+[instanceOfNewClass release];
+</code></pre>
+</div>
+
+<p>因为没有这个方法的声明，所以我使用 performSelector: 调用这个方法，这样编译器就不会输出警告了。</p>
+
+<p>现在 ReportFunction 会沿着 isa 指针告诉我们这个对象使用了哪些类，meta-class 和 meta-class 的类。</p>
+
+<p>获取一个对象的类：ReportFunction 使用 object_getClass 跟随 isa 指针，因为 isa 指针是一个类中一个受保护的成员变量（你不能直接访问其他对象的 isa 指针）。ReportFunction  没有以类方法的形式这样调用，因为在 Class 对象上调用类方法不会返回 meta-class，而是再次返回 Class 对象（所以 [NSString class] 会返回 NSString 的类而不是 NSString 的 meta-class）。</p>
+
+<p>这个是程序运行后的结果（省去了 NSLog 的前缀）。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>This object is 0x10010c810.
+Class is RuntimeErrorSubclass, and super is NSError.
+Following the isa pointer 1 times gives 0x10010c600
+Following the isa pointer 2 times gives 0x10010c630
+Following the isa pointer 3 times gives 0x7fff71038480
+Following the isa pointer 4 times gives 0x7fff71038480
+NSObject's class is 0x7fff710384a8
+NSObject's meta class is 0x7fff71038480
+</code></pre>
+</div>
+
+<p>看看通过递归的查看 isa 的地址：</p>
+
+<ul>
+  <li>the object is address 0x10010c810.</li>
+  <li>the class is address 0x10010c600.</li>
+  <li>the meta-class is address 0x10010c630.</li>
+  <li>the meta-class’s class (i.e. the NSObject meta-class) is address 0x7fff71038480.</li>
+  <li>the NSObject meta-class’ class is itself.</li>
+</ul>
+
+<p>地址的值不是很重要，只是演示了上面讨论的从类到 meta-class 到 NSObject 的 meta-class 的过程。</p>
+
+<h2 id="section-3">结论</h2>
+<p>meta-class 是 Class 对象的类。每个 Class 都有个不同的自己的 meta-class（因此每个 Class 都可以有一个自己不同的方法列表）。也就是说每个类的 Class 不完全相同。</p>
+
+<p>meta-class 总是会保证 Class 对象会有从基类继承的所有的的实例和类方法，加上之后继承的类方法。如从 NSObject 继承的类，就意味着在所有的 Class（和 meta-class）对象中定义了所有从 NSObject 继承的实例和协议方法。</p>
+
+<p>所有的 meta-class 使用基类的 meta-class（NSObject 的 meta-class 用于继承自 NSObject 的类）作为他们自己的类，包括在运行时自己定义的基础的 meta-class。</p>
+
+  </div>
+
+  <div class="date">
+    Written on December  8, 2013
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>[译]Friday Q&A : 动手实现 objc_msgSend – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="作者 Mike Ash
+原文地址
+
+" />
+    <meta property="og:description" content="作者 Mike Ash
+原文地址
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="[译]Friday Q&A : 动手实现 objc_msgSend" />
+    <meta property="twitter:title" content="[译]Friday Q&A : 动手实现 objc_msgSend" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>[译]Friday Q&A : 动手实现 objc_msgSend</h1>
+
+  <div class="entry">
+    <p>作者 Mike Ash<br />
+<a href="https://www.mikeash.com/pyblog/friday-qa-2012-11-16-lets-build-objc_msgsend.html">原文地址</a></p>
+
+<p>objc_msgSend 函数支撑了我们使用 Objective-C 实现的一切。Gwynne Raskind，Friday Q&amp;A 的读者，建议我谈谈 objc_msgSend 的内部实现。要理解某件事还有比自己动手实现一次更好的方法吗？咱们来自己动手实现一个 objc_msgSend。</p>
+
+<h2 id="tramapoline-trampopoline-">Tramapoline! Trampopoline! (蹦床)</h2>
+
+<p>当你写了一个发送 Objective-C 消息的方法：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[obj message]
+</code></pre>
+</div>
+
+<p>编译器会生成一个 objc_msgSend 调用：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>objc_msgSend(obj, @selector(message));
+</code></pre>
+</div>
+
+<p>之后 objc_msgSend 会负责转发这个消息。</p>
+
+<p>它都做了什么？它会查找合适的函数指针或者 IMP，然后调用，最后跳转。任何传给 objc_msgSend 的参数，最终都会成为 IMP 的参数。 IMP 的返回值成为了最开始被调用的方法的返回值。</p>
+
+<p>因为 objc_msgSend 只是负责接收参数，找到合适的函数指针，然后跳转，有时管这种叫做 trampoline（译注：[蹦床](https://en.wikipedia.org/wiki/Trampoline_(computing)）. 更通用的来说，任何一段负责把一段代码转发到另一处的代码，都可以被叫做 trampoline。</p>
+
+<p>这种转发的行为使 objc_msgSend 变得特殊起来。因为它只是简单的查找合适的代码，然后直接跳转过去，这相当的通用。传入任何参数组合都可以，因为它只是把这些参数留给 IMP 去读取。返回值有些棘手，但最终都可以看成 objc_msgSend 的不同变种。</p>
+
+<p>不幸的是，这些转发行为都不能用纯 C 实现。因为没有方法可以将传入 C 函数的泛参（generic parameters）传给另一个函数。 你可以使用变参，但是变参和普通参数的传递方法不同，而且慢，所以这不适合普通的 C 参数。</p>
+
+<p>如果要用 C 来实现 objc_msgSend，基本样子应该像这样：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>id objc_msgSend(id self, SEL _cmd, ...)
+{
+	Class c = object_getClass(self);
+	IMP imp = class_getMethodImplementation(c, _cmd);
+	return imp(self, _cmd, ...);
+}
+</code></pre>
+</div>
+
+<p>这有点过于简单。事实上会有一个方法缓存来提升查找速度，像这样：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>id objc_msgSend(id self, SEL _cmd, ...)
+{
+	Class c = object_getClass(self);
+	IMP imp = cache_lookup(c, _cmd);
+	if(!imp)
+		imp = class_getMethodImplementation(c, _cmd);
+	return imp(self, _cmd, ...);
+}
+</code></pre>
+</div>
+
+<p>通常为了速度，cache_lookup 使用 inline 函数实现。</p>
+
+<h2 id="section">汇编</h2>
+
+<p>在 Apple 版的 runtime 中，为了最大化速度，整个函数是使用汇编实现的。在 Objective-C 中每次发送消息都会调用 objc_msgSend，在一个应用中最简单的动作都会有成千或者上百万的消息。</p>
+
+<p>为了让事情更简单，我自己的实现中会尽可能少的使用汇编，使用独立的 C 函数抽象复杂度。汇编代码会实现下面的功能：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>id objc_msgSend(id self, SEL _cmd, ...)
+{
+	IMP imp = GetImplementation(self, _cmd);
+	imp(self, _cmd, ...);
+}
+</code></pre>
+</div>
+
+<p>GetImplementation 可以用更可读的方式工作。</p>
+
+<p>汇编代码需要：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>1. 把所有潜在的参数存储在安全的地方，确保 GetImplementation 不会覆盖它们。
+2. 调用 GetImplementation。
+3. 把返回值保存在某处。
+4. 恢复所有的参数值。
+5. 跳转到 GetImplementation 返回的 IMP。
+</code></pre>
+</div>
+
+<p>让我们开始吧！</p>
+
+<p>这里我会尝试使用 x86-64 汇编，这样可以很方便的在 Mac 上工作。这些概念也可以应用于 i386 或者 ARM。</p>
+
+<p>这个函数会保存在独立的文件中，叫做 msgsend-asm.s。这个文件可以像源文件那样传递给编译器，然后会被编译并链接到程序中。</p>
+
+<p>第一件事要做的是声明全局的符号（global symbol）。因为一些无聊的历史原因，C 函数的 global symbol 会在名字前有个下划线：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>.globl _objc_msgSend
+_objc_msgSend:
+</code></pre>
+</div>
+
+<p>编译器会很高兴的链接最近可使用的(nearest available) objc_msgSend。简单的链接这个到一个测试 app 已经可以让 [obj message] 表达式使用我们自己的代码而不是苹果的 runtime，这样可以相当方便的测试我们的代码确保它可以工作。</p>
+
+<p>整型数和指针参数会被传入寄存器 %rsi, %rdi, %rdx, %rcx, %r8 和 %r9。其他类型的参数会被传进栈（stack）中。这个函数最先做的事情是把这六个寄存器中的值保存在栈中，这样它们可以在之后被恢复：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>pushq %rsi
+pushq %rdi
+pushq %rdx
+pushq %rcx
+pushq %r8
+pushq %r9
+</code></pre>
+</div>
+
+<p>除了这些寄存器，寄存器 %rax 扮演了一个隐藏的参数。它用于变参的调用，并保存传入的向量寄存器（vector registers）的数量，用于被调用的函数可以正确的准备变参列表。以防目标函数是个变参的方法，我同样也保存了这个寄存器中的值：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>pushq %rax
+</code></pre>
+</div>
+
+<p>为了完整性，用于传入浮点类型参数的寄存器 %xmm 也应该被保存。但是，要是我能确保 GetImplementation 不会传入任何的浮点数，我就可以忽略掉它们，这样我就可以让代码更简洁。</p>
+
+<p>接着，对齐栈。 Mac OS X 要求一个函数调用栈需要对齐 16 字节边界。上面的代码已经是栈对齐的，但是还是需要显式手动处理下，这样可以确保所有都是对齐的，就不用担心动态调用函数时会崩溃。要对齐栈，在保存 %r12 的原始值到栈中后，我把当前的栈指针保存到了 %r12 中。%r12 是随便选的，任何保存的调用者寄存器（caller-saved register）都可以。重要的是在调用完 GetImplementation 后这些值仍然存在。然后我把栈指针按位与（and）上 -0x10，这样可以清除栈底的四位：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>pushq %r12
+mov %rsp, %r12
+andq $-0x10, %rsp
+</code></pre>
+</div>
+
+<p>现在栈指针是对齐的了。这样可以安全的避开上面（above）保存的寄存器，因为栈是向下增长的，这种对齐的方法会让它更向下（move it further down）。</p>
+
+<p>是时候该调用 GetImplementation 了。它接收两个参数，self 和 _cmd。 调用习惯是把这两个参数分别保存到 %rsi 和 %rdi 中。然而传入 objc_msgSend 中时就是那样了，它们没有被移动过，所以不需要改变它们。所有要做的事情实际上是调用 GetImplementation，方法名前面也要有一个下划线：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>callq _GetImplementation
+</code></pre>
+</div>
+
+<p>整型数和指针类型的返回值保存在 %rax 中，这就是找到返回的 IMP 的地方。因为 %rax 需要被恢复到初始的状态，返回的 IMP 需要被移动到别的地方。我随便选了个 %r11。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mov %rax, %r11
+</code></pre>
+</div>
+
+<p>现在是时候该恢复原样了。首先要恢复之前保存在 %r12 中的栈指针，然后恢复旧的 %r12 的值：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>mov %r12, %rsp
+popq %r12
+</code></pre>
+</div>
+
+<p>然后按压入栈的相反顺序恢复寄存器的值：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>popq %rax
+popq %r9
+popq %r8
+popq %rcx
+popq %rdx
+popq %rdi
+popq %rsi
+</code></pre>
+</div>
+
+<p>现在一切都已经准备好了。参数寄存器（argument registers）都恢复到了之前的样子。目标函数需要的参数都在合适的位置了。 IMP 在寄存器 %r11 中，现在要做的是跳转到那里：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>jmp *%r11
+</code></pre>
+</div>
+
+<p>就这样！不需要其他的汇编代码了。jump 把控制权交给了方法实现。从代码的角度看，就好像发送消息者直接调用的这个方法。之前的那些迂回的调用方法都消失了。当方法返回，它会直接放回到 objc_msgSend 的调用处，不需要其他的操作。这个方法的返回值可以在合适的地方找到。</p>
+
+<p>非常规的返回值有一些细节需要注意。比如大的结构体（不能用一个寄存器大小保存的返回值）。在 x86-64，大的结构体使用隐藏的第一个参数返回。当你像这样调用：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>NSRect r = SomeFunc(a, b, c);
+</code></pre>
+</div>
+
+<p>这个调用会被翻译成这样：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>NSRect r;
+SomeFunc(&amp;r, a, b, c);
+</code></pre>
+</div>
+
+<p>用于返回值的内存地址被传入到 %rdi 中。因为 objc_msgSend 期望 %rdi 和 %rsi 中包含 self 和 _cmd，当一个消息返回大的结构体时不会起作用的。同样的问题存在于多个不同平台上。runtime 提供了 objc_msgSend_stret 用于返回结构体，工作原理和 objc_msgSend 类似，只是知道在 %rsi 中寻找 self 和在 %rdx 中寻找 _cmd。</p>
+
+<p>相似的问题发生在一些平台上发送消息（messages）返回浮点类型值。在这些平台上，runtime 提供了 objc_msgSend_fpret（在 x86-64，objc_msgSend_fpret2 用于特别极端的情况）。</p>
+
+<h2 id="section-1">方法查找</h2>
+
+<p>让我们继续实现 GetImplementation。上面的汇编蹦床意味着这些代码可以用 C 实现。记得吗，在真正的 runtime 中，这些代码都是直接用汇编写的，是为了尽可能的保证最快的速度。这样不仅可以更好的控制代码，也可以避免重复像上面那样保存并恢复寄存器的代码。</p>
+
+<p>GetImplementation 可以简单的调用 class_getMethodImplementation 实现，混入 Objective-C runtime 的实现。这有点无聊。真正的 objc_msgSend 为了最大化速度首先会查找类的方法缓存。因为 GetImplementation 想模仿 objc_msgSend，所以它也会这么做。要是缓存中不包含给定的 selector 入口点（entry），它会继续查找 runtime（it fall back to querying the runtime）。</p>
+
+<p>我们现在需要的是一些结构体定义。方法缓存是类（class）结构体中的私有结构体，为了得到它我们需要定义自己的版本。尽管是私有的，这些结构体的定义还是可以通过苹果的 Objective-C runtime 开源实现获得（译注：http://opensource.apple.com/tarballs/objc4/）。</p>
+
+<p>首先需要定义一个 cache entry：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>typedef struct {
+	SEL name;
+	void *unused;
+	IMP imp;
+} cache_entry;
+</code></pre>
+</div>
+
+<p>相当简单。别问我 unused 字段是干什么的，我也不知道它为什么在那。这是 cache 的全部定义：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>struct objc_cache {
+	uintptr_t mask;
+	uintptr_t occupied;
+	cache_entry *buckets[1];
+};
+</code></pre>
+</div>
+
+<p>缓存使用 hash table（哈希表）实现。实现这个表是为了速度的考虑，其他无关的都简化了，所以它有点不一样。表的大小永远都是 2 的幂。表格使用 selector 做索引，bucket 是直接使用 selector 的值做索引，可能会通过移位去除不相关的低位（low bits），并与 mask 执行一个逻辑与（logical and）。下面是一些宏，用于给定 selector 和 mask 时计算 bucket 的索引：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#ifndef __LP64__
+# define CACHE_HASH(sel, mask) (((uintptr_t)(sel)&gt;&gt;2) &amp; (mask))
+#else
+# define CACHE_HASH(sel, mask) (((unsigned int)((uintptr_t)(sel)&gt;&gt;0)) &amp; (mask))
+#endif
+</code></pre>
+</div>
+
+<p>最后是类的结构体。 这是 Class 指向的类型：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>struct class_t {
+	struct class_t *isa;
+	struct class_t *superclass;
+	struct objc_cache *cache;
+	IMP *vtable;
+};
+</code></pre>
+</div>
+
+<p>需要的结构体都已经有了，现在开始实现 GetImplementation 吧：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>IMP GetImplementation(id self, SEL _cmd)
+{
+</code></pre>
+</div>
+
+<p>首先要做的是获取对象的类。真正的 objc_msgSend 通过类似 self-&gt;isa 的方式获取，但是它会使用官方的 API 实现：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>	Class c = object_getClass(self);
+</code></pre>
+</div>
+
+<p>因为我想访问最原始的形式，我会为指向 class_t 结构体的指针执行类型转换：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>	struct class_t *classInternals = (struct class_t *)c;
+</code></pre>
+</div>
+
+<p>现在该查找 IMP 了。首先我们把它初始为 NULL。如果我们在缓存中找到，我们会赋值为它。如果查找缓存后仍为 NULL，我们会回退到速度较慢的方法：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>	IMP imp = NULL;
+</code></pre>
+</div>
+
+<p>接着，获取指向 cache 的指针：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>	struct objc_cache *cache = classInternals-&gt;cache;
+</code></pre>
+</div>
+
+<p>计算 bucket 的索引，获取指向 buckets 数组的指针：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>	uintptr_t index = CACHE_HASH(_cmd, cache-&gt;mask);
+	cache_entry **buckets = cache-&gt;buckets;
+</code></pre>
+</div>
+
+<p>然后，我们使用要找的 selector 查找缓存。runtime 使用的是线性链（linear chaining），之后只是遍历 buckets 子集直到找到需要的 entry 或者 NULL entry：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>	for(; buckets[index] != NULL; index = (index + 1) &amp; cache-&gt;mask)
+	{
+		if(buckets[index]-&gt;name == _cmd)
+		{
+			imp = buckets[index]-&gt;imp;
+			break;
+		}
+	}
+</code></pre>
+</div>
+
+<p>如果没有找到 entry，我们会调用 runtime 使用一种较慢的方法。在真正的 objc_msgSend 中，上面的所有代码都是使用汇编实现的，这时候就该离开汇编代码调用 runtime 自己的方法了。一旦查找缓存后没有找到需要的 entry，期望快速发送消息的希望就要落空了。这时候获取更快的速度就没那么重要了，因为已经注定会变慢，在一定程度上也极少的需要这么调用。因为这点，放弃汇编代码转而使用更可维护的 C 也是可以接受的：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>	if(imp == NULL)
+		imp = class_getMethodImplementation(c, _cmd);
+</code></pre>
+</div>
+
+<p>不管怎样，IMP 现在已经获取到了。如果它在缓存中，就会在那里找到它，否则它会通过 runtime 查找到。class_getMethodImplementation 调用同样会使用缓存，所以下次调用会更快。剩下的就是返回 IMP：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>	return imp;
+}
+</code></pre>
+</div>
+
+<h2 id="section-2">测试</h2>
+<p>为了确保它能工作，我写了一个快速的测试程序：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="k">@interface</span> <span class="nc">Test</span> <span class="p">:</span> <span class="nc">NSObject</span>
+<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">none</span><span class="p">;</span>
+<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">param</span><span class="p">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">x</span><span class="p">;</span>
+<span class="k">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="nf">params</span><span class="p">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="nv">a</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">b</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">c</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">d</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">e</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">f</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">g</span><span class="p">;</span>
+<span class="k">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">retval</span><span class="p">;</span>
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">Test</span>
+
+<span class="k">-</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="n">init</span>
+<span class="p">{</span>
+	<span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"in init method, self is %p</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">self</span><span class="p">);</span>
+	<span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">none</span>
+<span class="p">{</span>
+	<span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"in none method</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">param</span><span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">x</span>
+<span class="p">{</span>
+	<span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"got parameter %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">x</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">params</span><span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">a</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">b</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">c</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">d</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">e</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">f</span> <span class="o">:</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">g</span>
+<span class="p">{</span>
+	<span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"got params %d %d %d %d %d %d %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="n">g</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">int</span><span class="p">)</span><span class="n">retval</span>
+<span class="p">{</span>
+	<span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"in retval method</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+	<span class="k">return</span> <span class="mi">42</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">@end</span>
+
+
+<span class="kt">int</span> <span class="n">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+	<span class="p">{</span>
+		<span class="n">Test</span> <span class="o">*</span><span class="n">t</span> <span class="o">=</span> <span class="p">[[</span><span class="n">Test</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">init</span><span class="p">];</span>
+		<span class="p">[</span><span class="n">t</span> <span class="nf">none</span><span class="p">];</span>
+		<span class="p">[</span><span class="n">t</span> <span class="nf">param</span><span class="p">:</span> <span class="mi">9999</span><span class="p">];</span>
+		<span class="p">[</span><span class="n">t</span> <span class="nf">params</span><span class="p">:</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">2</span> <span class="o">:</span> <span class="mi">3</span> <span class="o">:</span> <span class="mi">4</span> <span class="o">:</span> <span class="mi">5</span> <span class="o">:</span> <span class="mi">6</span> <span class="o">:</span> <span class="mi">7</span><span class="p">];</span>
+		<span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span> <span class="s">"retval gave us %d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="p">[</span><span class="n">t</span> <span class="nf">retval</span><span class="p">]);</span>
+
+		<span class="n">NSMutableArray</span> <span class="o">*</span><span class="n">a</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSMutableArray</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">init</span><span class="p">];</span>
+		<span class="p">[</span><span class="n">a</span> <span class="nf">addObject</span><span class="p">:</span> <span class="mi">@1</span><span class="p">];</span>
+		<span class="p">[</span><span class="n">a</span> <span class="nf">addObject</span><span class="p">:</span> <span class="err">@</span><span class="p">{</span> <span class="s">@"foo"</span> <span class="o">:</span> <span class="s">@"bar"</span> <span class="p">}];</span>
+		<span class="p">[</span><span class="n">a</span> <span class="nf">addObject</span><span class="p">:</span> <span class="err">@</span><span class="p">(</span><span class="s">"blah"</span><span class="p">)];</span>
+		<span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">@2</span><span class="p">;</span>
+		<span class="n">NSLog</span><span class="p">(</span><span class="s">@"%@"</span><span class="p">,</span> <span class="n">a</span><span class="p">);</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>以防因为一些意外调用的是 runtime 的实现。我在 GetImplementation 中加了一些调试的日志确保它被调用了。一切都正常，即使是 literals and subscripting 也都调用的是替换的实现。</p>
+
+<h2 id="section-3">结论</h2>
+
+<p>objc_msgSend 的核心部分相当的简单。但它的实现需要一些汇编代码，这让它比它应该的样子更难理解。但是为了性能的优化还是得使用一些汇编代码。但是通过构建了一个简单的汇编蹦床，然后使用 C 实现了它的逻辑，我们可以看到它是如何工作的，它真的没有什么高深的。</p>
+
+<p>很显然，你不应该在自己的 app 中使用替换的 objc_msgSend 实现。你会后悔这么做的。这么做只为了学习目的。</p>
+
+  </div>
+
+  <div class="date">
+    Written on August 10, 2015
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

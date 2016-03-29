@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="Less but Better!">
+    <meta property="og:description" content="Less but Better!" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <div class="posts">
+  
+    <article class="post">
+
+      <h1><a href="/git-tag/">git tag</a></h1>
+
+      <div class="entry">
+        <p>git 的 tag 分为两种类型：</p>
+
+
+      </div>
+
+      <a href="/git-tag/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/git-change-author/">git 变更已经提交的 commit 的 author</a></h1>
+
+      <div class="entry">
+        <div class="highlighter-rouge"><pre class="highlight"><code>git filter-branch --commit-filter '
+	if [ "$GIT_COMMITTER_NAME" = "&lt; Old Name &gt;" ];
+	then
+		GIT_COMMITTER_NAME="&lt; New Name &gt;";
+		GIT_AUTHOR_NAME="&lt; New Name &gt;";
+		GIT_COMMITTER_EMAIL="&lt; New Email &gt;";
+		GIT_AUTHOR_EMAIL="&lt; New Email &gt;";
+		git commit-tree "$@";
+	else
+		git commit-tree "$@";
+	fi' HEAD
+</code></pre>
+</div>
+
+
+      </div>
+
+      <a href="/git-change-author/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/fan-zhuan-dan-xiang-lie-biao/">翻转单向列表</a></h1>
+
+      <div class="entry">
+        <div class="highlighter-rouge"><pre class="highlight"><code>#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdlib.h&amp;gt;
+</code></pre>
+</div>
+
+
+      </div>
+
+      <a href="/fan-zhuan-dan-xiang-lie-biao/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/ios-dismiss-keyboard/">iOS 隐藏键盘</a></h1>
+
+      <div class="entry">
+        <div class="highlighter-rouge"><pre class="highlight"><code>[textView resignFirstResponder];
+或者
+[[[UIApplication sharedApplication] keyWindow] endEditing:YES];
+</code></pre>
+</div>
+
+      </div>
+
+      <a href="/ios-dismiss-keyboard/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/objective-c-split-by-capitalize/">Objective-C 使用大小写分割字符串</a></h1>
+
+      <div class="entry">
+        <div class="highlighter-rouge"><pre class="highlight"><code>NSString *string = @"ThisStringIsJoined";
+NSRegularExpression *regexp = [NSRegularExpression 
+	regularExpressionWithPattern:@"([a-z])([A-Z])" 
+	options:0 
+	error:NULL];
+NSString *newString = [regexp 
+	stringByReplacingMatchesInString:string 
+	options:0 
+	range:NSMakeRange(0, string.length) 
+	withTemplate:@"$1 $2"];
+NSLog(@"Changed '%@' -&gt; '%@'", string, newString);
+</code></pre>
+</div>
+
+
+      </div>
+
+      <a href="/objective-c-split-by-capitalize/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/a-little-architecture/">一个小的架构</a></h1>
+
+      <div class="entry">
+        <p>原文<a href="http://blog.cleancoder.com/uncle-bob/2016/01/04/ALittleArchitecture.html">《A Little Architecture》</a> by Robert C. Martin (Uncle Bob)</p>
+
+
+      </div>
+
+      <a href="/a-little-architecture/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/mo-nian-li-ji-suan-xing-qi-ji-mu-la-er-sen-gong-shi/">万年历计算星期-基姆拉尔森公式</a></h1>
+
+      <div class="entry">
+        <div class="highlighter-rouge"><pre class="highlight"><code>#include &lt;stdio.h&gt;
+</code></pre>
+</div>
+
+
+      </div>
+
+      <a href="/mo-nian-li-ji-suan-xing-qi-ji-mu-la-er-sen-gong-shi/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/content-disposition/">Content-disposition中 attachment 和 inline 的区别</a></h1>
+
+      <div class="entry">
+        <p>Content-disposition: inline; filename=foobar.pdf
+表示浏览器内嵌显示一个文件</p>
+
+
+      </div>
+
+      <a href="/content-disposition/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/brew-list-upgradable/">Homebrew 列出可更新的软件</a></h1>
+
+      <div class="entry">
+        <div class="highlighter-rouge"><pre class="highlight"><code>brew outdated
+</code></pre>
+</div>
+
+      </div>
+
+      <a href="/brew-list-upgradable/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/app-installation-failed/">App installation failed</a></h1>
+
+      <div class="entry">
+        <p>最近用 XCode 真机调试的时候出现：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>A signed resource has been added, modified, or deleted.
+</code></pre>
+</div>
+
+<p>没法安装应用到手机上，解决办法是直接删除项目 DerivedData 下的 .app 和 .appex ：</p>
+
+
+      </div>
+
+      <a href="/app-installation-failed/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/a-strategy-for-great-work/">A strategy for great work</a></h1>
+
+      <div class="entry">
+        <ul>
+  <li>Know a good idea when you see it</li>
+  <li>Don’t try to solve every problem at once</li>
+  <li>Find smart friends and listen to them</li>
+  <li>Work should explain itself</li>
+  <li>Choose the simplest thing which might work</li>
+  <li>Only show your best work</li>
+  <li>Iterating quickly leads to better work</li>
+  <li>Be kind to people, but be honest about work</li>
+  <li>Separate yourself from work</li>
+  <li>You’re never done</li>
+</ul>
+
+      </div>
+
+      <a href="/a-strategy-for-great-work/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/gnu-assemblers-assembly-directives/">GNU assembler’s assembly directives</a></h1>
+
+      <div class="entry">
+        <p>http://cs.mtu.edu/~mmkoksal/blog/?x=entry:entry120116-130037</p>
+
+      </div>
+
+      <a href="/gnu-assemblers-assembly-directives/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/dong-shou-shi-xian-objc-msgsend/">[译]Friday Q&A : 动手实现 objc_msgSend</a></h1>
+
+      <div class="entry">
+        <p>作者 Mike Ash<br />
+<a href="https://www.mikeash.com/pyblog/friday-qa-2012-11-16-lets-build-objc_msgsend.html">原文地址</a></p>
+
+
+      </div>
+
+      <a href="/dong-shou-shi-xian-objc-msgsend/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/git-reflog/">救命用的 git reflog（恢复 git reset --hard）</a></h1>
+
+      <div class="entry">
+        <p>今天不小心手贱没有 push 到 remote 就执行了 git reset –hard xxxx，然后新提交的代码都没了。。。。。<br />
+两天的工作量啊！！</p>
+
+
+      </div>
+
+      <a href="/git-reflog/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/ruby-zhong-wen-hao-de-yong-fa/">Ruby 中问号后跟一个字符的用法</a></h1>
+
+      <div class="entry">
+        <p>今天在读 Sinatra 的源码时看到了这样的用法：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>type = ".#{type}" unless type.to_s[0] == ?.
+</code></pre>
+</div>
+
+<p>最开始以为是最后那个 <strong>?.</strong> 是个正则表达式的特殊写法，后来谷歌了下 <strong>?</strong> 后跟一个 ASCII 字符会返回这个 ASCII 字符。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>等价的表达式：
+?. == '.'
+?a == 'a'
+?A == 'A'
+</code></pre>
+</div>
+
+<p>类似的有 0X 开头的会返回数字的 16 进制形式， 0 开头的会返回 8 进制形式。</p>
+
+
+      </div>
+
+      <a href="/ruby-zhong-wen-hao-de-yong-fa/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/ru-he-shan-chu-rvm/">如何删除 RVM</a></h1>
+
+      <div class="entry">
+        <p>在命令行中执行</p>
+
+
+      </div>
+
+      <a href="/ru-he-shan-chu-rvm/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/macbook-pro-force-touch-kai-qi-san-zhi-tuo-dong/">MacBook Pro（Force Touch 款） 开启三指拖动</a></h1>
+
+      <div class="entry">
+        <ol>
+  <li>从 Apple 菜单中选择 System Preferences。</li>
+  <li>选择 Accessibility 按钮。</li>
+  <li>从左侧列表中选择 Mouse &amp; Trackpad。</li>
+  <li>点击右栏左下角的 Trackpad Options。</li>
+  <li>勾选 “Enable dragging”。</li>
+  <li>从右侧下拉菜单中选择 “three finger drag”，点击 OK 保存设置。</li>
+</ol>
+
+
+      </div>
+
+      <a href="/macbook-pro-force-touch-kai-qi-san-zhi-tuo-dong/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/mac-os-x-shang-cha-kan-jdk-wei-zhi/">Mac OS X 上查看 JDK 位置</a></h1>
+
+      <div class="entry">
+        <p>在命令行执行此命令：</p>
+
+
+      </div>
+
+      <a href="/mac-os-x-shang-cha-kan-jdk-wei-zhi/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/remote-user-is-over-quota/">remote: User Is Over Quota</a></h1>
+
+      <div class="entry">
+        <p>今天在镜像 AOSP 时，出现了了 <code class="highlighter-rouge">remote: User Is Over Quota</code> 这个提示，以为是网络错误，google 了下原来是我下载的速度太快了超过了服务器匿名连接的限额，登录下 google账号配置下就行了。</p>
+
+
+      </div>
+
+      <a href="/remote-user-is-over-quota/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/python-jiao-ben-jie-xi-ipa-wen-jian/">Python 脚本解析 ipa 文件</a></h1>
+
+      <div class="entry">
+        <div class="highlighter-rouge"><pre class="highlight"><code>def plist(self):
+</code></pre>
+</div>
+
+
+      </div>
+
+      <a href="/python-jiao-ben-jie-xi-ipa-wen-jian/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/xian-duan-jing-jian-suan-fa/">线段精简算法</a></h1>
+
+      <div class="entry">
+        <h2 id="visvalingamwhyatt">Visvalingam–Whyatt</h2>
+
+
+      </div>
+
+      <a href="/xian-duan-jing-jian-suan-fa/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/cocoapods-de-specs-de-guo-nei-jing-xiang/">Cocoapods 的 Specs 的国内镜像</a></h1>
+
+      <div class="entry">
+        <p>Cocoapods 的 Specs 项目在 github 上，长久以来访问速度很慢，所以就做了个国内的镜像，每半小时同步一次。
+替换方法:</p>
+
+
+      </div>
+
+      <a href="/cocoapods-de-specs-de-guo-nei-jing-xiang/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/yi-li-jie-objctive-c-runtime/">【译】理解 Objective-C Runtime</a></h1>
+
+      <div class="entry">
+        <p>原文 <a href="http://cocoasamurai.blogspot.jp/2010/01/understanding-objective-c-runtime.html">Understanding the Objective-C Runtime</a></p>
+
+
+      </div>
+
+      <a href="/yi-li-jie-objctive-c-runtime/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/shi-yongcoretelephony-zhong-de-si-you-jie-kou-she-zhi-yi-dong-wang-luo-kai-guan/">使用 CoreTelephony 中的私有接口设置移动网络开关</a></h1>
+
+      <div class="entry">
+        <p>函数声明:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>extern BOOL CTCellularDataPlanGetIsEnabled();   // 查询
+extern void CTCellularDataPlanSetIsEnabled(BOOL enabled);   // 设置
+</code></pre>
+</div>
+
+
+      </div>
+
+      <a href="/shi-yongcoretelephony-zhong-de-si-you-jie-kou-she-zhi-yi-dong-wang-luo-kai-guan/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/sqlite-jie-kou-jie-shao/">【译】SQLite C/C++ 接口介绍</a></h1>
+
+      <div class="entry">
+        <h1 id="sqlite-cc-">SQLite C/C++ 接口介绍</h1>
+
+
+      </div>
+
+      <a href="/sqlite-jie-kou-jie-shao/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/ios-android-lifecycle/">《科技想要什么》</a></h1>
+
+      <div class="entry">
+        <p>技术元素扩展了生命的基本特性，在这个过程中，它还扩展了生命基本的善。生命不断增加的多样性，对感知能力的追求、从一般到差异的长期趋势，产生新版自我的基本（也是矛盾的）能力以及对无限博弈的持续参与是技术元素的真正本性和“需求”。或者，我应该说，技术元素的需求也是生命的需求。但是技术元素并不会止步于此。它还扩展思维的基本特性，在这一过程中同时扩展思维基本的善。科技强化了思维想要统一所有思想的强烈愿望，加速推进所有人之间的联系，让世界充满各种可想到的理解无限性的方法。</p>
+
+
+      </div>
+
+      <a href="/ios-android-lifecycle/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/zai-zhong-duan-zhong-shi-yong-swift/">在终端中使用 swift</a></h1>
+
+      <div class="entry">
+        <p>1、有一种方法是直接把 swift 的路径加入到 PATH 环境变量中
+2、使用 xcrun 命令</p>
+
+
+      </div>
+
+      <a href="/zai-zhong-duan-zhong-shi-yong-swift/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/linux-bookmarks/">Linux Bookmarks</a></h1>
+
+      <div class="entry">
+        <p>Linux Bookmarks <a href="https://github.com/6david9/LinuxBookmarks">https://github.com/6david9/LinuxBookmarks</a></p>
+
+
+      </div>
+
+      <a href="/linux-bookmarks/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/git-diff/">git diff 的几种用法</a></h1>
+
+      <div class="entry">
+        <div class="highlighter-rouge"><pre class="highlight"><code>unstaged compr HEAD : git diff HEAD filename
+</code></pre>
+</div>
+
+
+      </div>
+
+      <a href="/git-diff/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/joe/">大文件编辑器 joe（Joe's Own Editor）</a></h1>
+
+      <div class="entry">
+        <p>推荐一个 Unix/Linux 下的大文件编辑器 joe，在我的 Mac 上打开一个 2.9G 的文件，占用内存60M+，打开时间半分钟左右，支持 emacs 的语法，可以通过正则表达式查找，对于想要交互式的编辑文件的用户推荐使用，对于只喜欢用 grep，sed，awk 系的用户可以忽略。Mac 下安装方法：</p>
+
+
+      </div>
+
+      <a href="/joe/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/zai-cycript-zhong-shi-yong-ios-de-nei-zhi-han-shu/">在 Cycript 中使用 iOS 的内置函数</a></h1>
+
+      <div class="entry">
+        <h2 id="nstemporarydirectory-">NSTemporaryDirectory 的使用方法</h2>
+<p>在调试的时候需要输入一些文件到磁盘上，为了省事，想直接输出到沙盒中的 tmp 目录下，但是调用 NSTemporaryDirectory() 却提示找不到这个函数，谷哥了下：</p>
+
+
+      </div>
+
+      <a href="/zai-cycript-zhong-shi-yong-ios-de-nei-zhi-han-shu/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/cycript-chang-yong-fang-fa-zong-jie/">Cycript 常用方法总结</a></h1>
+
+      <div class="entry">
+        <h1 id="cycript--readline-">Cycript 内部使用 readline 处理命令行的交互</h1>
+
+
+      </div>
+
+      <a href="/cycript-chang-yong-fang-fa-zong-jie/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/app-za-ke-ji/">App 砸壳记</a></h1>
+
+      <div class="entry">
+        <p>借助 OC 的动态特性，要想 “学习” 一款应用变得相当的方便。今天讲讲用 class-dump 导出 app 中的可执行文件的头文件。</p>
+
+
+      </div>
+
+      <a href="/app-za-ke-ji/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/za/">杂</a></h1>
+
+      <div class="entry">
+        <p>当一门数学学科远离它的经验来源，或者甚至它只是由来自“实际”的思想间接激发产生的第二代和第三代，这门学科就危机四伏了。它会越来越走向纯美学化，越来越纯粹地为艺术而艺术……现在有一种巨大的危险:这门学科将沿着那条阻力最小的路线发展……将会分崩离析，成为许多无足轻重的分支……无论如何，我觉得唯一的补救办法就是恢复到青春回到起源，重新注入多少是直接经验的思想。  -约翰·冯·诺伊曼</p>
+
+      </div>
+
+      <a href="/za/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/uitableview-gun-dong-liu-cheng-xing-you-hua/">UITableView 滚动流畅性优化</a></h1>
+
+      <div class="entry">
+        <h1 id="uitableview-">影响 UITableView 滚动的流畅性的原因</h1>
+
+
+      </div>
+
+      <a href="/uitableview-gun-dong-liu-cheng-xing-you-hua/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/gpuda-bai-ke-quan-shu/">GPU大百科全书</a></h1>
+
+      <div class="entry">
+        <p><strong>整理自中关村在线，版权归中关村在线所有</strong><br /><br /></p>
+
+
+      </div>
+
+      <a href="/gpuda-bai-ke-quan-shu/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/block-delegate/">【译】block 还是代理</a></h1>
+
+      <div class="entry">
+        <p>原文地址：<a href="http://stablekernel.com/blog/blocks-or-delegation/">http://stablekernel.com/blog/blocks-or-delegation/</a></p>
+
+
+      </div>
+
+      <a href="/block-delegate/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/you-must-try/">【译】你必须先尝试，然后你必须提问</a></h1>
+
+      <div class="entry">
+        <p>原文地址：<a href="https://blogs.akamai.com/2013/10/you-must-try-and-then-you-must-ask.html">https://blogs.akamai.com/2013/10/you-must-try-and-then-you-must-ask.html</a></p>
+
+
+      </div>
+
+      <a href="/you-must-try/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/ni-hao-2014/">你好2014</a></h1>
+
+      <div class="entry">
+        <p>今天是 2013 年的最后一天，总结下这一年的收获吧。<br />
+2013 年的关键词：学习，分享，多领域，探索。</p>
+
+
+      </div>
+
+      <a href="/ni-hao-2014/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/dai-ma-de-huai-wei-dao/">【转】代码的坏味道</a></h1>
+
+      <div class="entry">
+        <p>转自：<a href="http://www.cnblogs.com/mywolrd/archive/2012/04/24/2467395.html">http://www.cnblogs.com/mywolrd/archive/2012/04/24/2467395.html</a></p>
+
+
+      </div>
+
+      <a href="/dai-ma-de-huai-wei-dao/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/meta-class/">【译】Objective-C 中的 meta-class 是什么？</a></h1>
+
+      <div class="entry">
+        <p><a href="http://www.cocoawithlove.com/2010/01/what-is-meta-class-in-objective-c.html">原文地址</a></p>
+
+<p>在这篇文章中，我关注的是 Objective-C 中的一个陌生的概念—— meta-class。在 Objective-C 中的每个类都有一个相关联的 meta-class，但是你很少会直接使用 meta-class，他们仍旧保持着神秘的面纱。我们从在运行时创建一个类开始。通过查看 “class pair”，我会解释 meta-class 是什么，同时也会谈谈在 Objective-C 中的对象或者类相关的一些一般主题。</p>
+
+
+      </div>
+
+      <a href="/meta-class/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/yong-jiao-ben-xia-zai-wwdc-2013-shi-pin-he-pdf/">用脚本下载 WWDC 2013 视频和pdf</a></h1>
+
+      <div class="entry">
+        <p>不多说了，直接<a href="http://blog.hoachuck.biz/blog/2013/06/15/script-to-download-wwdc-2013-videos/">传送门</a>：</p>
+
+
+      </div>
+
+      <a href="/yong-jiao-ben-xia-zai-wwdc-2013-shi-pin-he-pdf/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/za-tan/">杂谈</a></h1>
+
+      <div class="entry">
+        <p>很多次当我推荐码农们去看《提问的智慧》或者类似《xx语言编码规范》、《重构：改善既有代码》、《代码整洁之道》等类似的文章或书时，他们都以为这是对他们的鄙视而不屑去看。如果你一辈子等着别人喂你吃鱼，而不懂得钓鱼之术，那么你活该被饿死！很多时候一些二类人甚至是三类人和一类人的差别只是求知欲，自主学习的能力和做人的准则。</p>
+
+
+      </div>
+
+      <a href="/za-tan/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/wei-ji/">“危机”</a></h1>
+
+      <div class="entry">
+        <p>有些人太过短视，只看到了“危”，没有看到“机”。</p>
+
+
+      </div>
+
+      <a href="/wei-ji/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/ti-wen-de-zhi-hui/">提问的智慧</a></h1>
+
+      <div class="entry">
+        <p>转载自 http://www.douban.com/group/topic/7211883/</p>
+
+
+      </div>
+
+      <a href="/ti-wen-de-zhi-hui/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/2013-nian-12-yue-2-ri/">2013年12月2日</a></h1>
+
+      <div class="entry">
+        <p>与我同路的人会理解我，不与我同路的人我为他付出再多也是无济于事。</p>
+
+      </div>
+
+      <a href="/2013-nian-12-yue-2-ri/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/du-jing-yi-chuang-ye/">读《精益创业》</a></h1>
+
+      <div class="entry">
+        <p>Eric Ries 虽然近期在国内被一些人质疑，他也没有宣传的那么出色，优秀。但是我还是很认同他的一些观点，仅此而已。没有盲目的崇拜，只是在自己的认知下取其精华。</p>
+
+
+      </div>
+
+      <a href="/du-jing-yi-chuang-ye/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/du-chong-gou-yu-mo-shi/">读《重构与模式》</a></h1>
+
+      <div class="entry">
+        <p><strong>过度设计</strong>：是指代码的灵活性和复杂性超出所需。</p>
+
+
+      </div>
+
+      <a href="/du-chong-gou-yu-mo-shi/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/wo-shi-zhan-shen/">我是战神</a></h1>
+
+      <div class="entry">
+        <p><img src="/images/2013-11-15-1.png" alt="lines of lengtucao" /></p>
+
+
+      </div>
+
+      <a href="/wo-shi-zhan-shen/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/mac-slash-unix-xia-shi-yong-ming-ling-xing-cli-ssh-tunnel-sui-dao-dai-li-fang-wen-guo-wai-zi-yuan/">Mac/Unix 下使用命令行(CLI) SSH Tunnel(隧道) 代理访问国外资源</a></h1>
+
+      <div class="entry">
+        <p>在 Mac 的终端(terminal)下使用 SSH 隧道访问国外的网站需要安装 proxychains-ng。主要是用于 install 一些安装包时需要，当然了要是使用 wget 一些访问受限的资源也可以。</p>
+
+
+      </div>
+
+      <a href="/mac-slash-unix-xia-shi-yong-ming-ling-xing-cli-ssh-tunnel-sui-dao-dai-li-fang-wen-guo-wai-zi-yuan/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/shi-yong-afnetworking-tong-guo-post-fang-shi-fa-song-shu-ju/">使用 AFNetworking 通过 POST 方式发送数据</a></h1>
+
+      <div class="entry">
+        <p><strong>AFNetworking 版本为 2.0.2</strong></p>
+
+
+      </div>
+
+      <a href="/shi-yong-afnetworking-tong-guo-post-fang-shi-fa-song-shu-ju/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/mac-xia-shi-yong-curl-post-shu-ju/">Mac 下使用 curl POST 数据</a></h1>
+
+      <div class="entry">
+        <p>最近因为要测试服务器接口，需要批量向服务器上传图片，写了这个脚本：</p>
+
+
+      </div>
+
+      <a href="/mac-xia-shi-yong-curl-post-shu-ju/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/ios-ya-suo-tu-pian-fen-bian-lu/">iOS 压缩图片分辨率</a></h1>
+
+      <div class="entry">
+        <p>代码不是很难，直接上代码了：</p>
+
+
+      </div>
+
+      <a href="/ios-ya-suo-tu-pian-fen-bian-lu/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/dispatch-benchmark/">dispatch_benchmark</a></h1>
+
+      <div class="entry">
+        <h3 id="section">要是你不知道这个是干什么的，那么以下的内容对你并不适用。</h3>
+
+
+      </div>
+
+      <a href="/dispatch-benchmark/" class="read-more">Read More</a>
+    </article>
+  
+    <article class="post">
+
+      <h1><a href="/guan-yu-uitableview-zhong-cell-zi-gua-ying-gao-du-de-wen-ti/">关于 UITableView 中 cell 自适应高度的问题</a></h1>
+
+      <div class="entry">
+        <p>最近在做一个app，内容主要是 一个 table view 的 cell 中有一张宽度一定高度不一定的图片和不一样高度的文字。每次从服务器楼数据会返回图片的 URL 地址和文字等内容，但只有图片下载完成后才能知道图片的大小。文字可以通过一些 API 计算固定宽度后的高度，但是图片在不下载完成后是不知道图片的宽高的。我们“很硬”的后台没有提供相关的接口。因为项目比较紧，两个星期完成一个 APP。。。。。两个星期，尼玛我一个人码了小 4w 行的代码，一个人。。。。</p>
+
+
+      </div>
+
+      <a href="/guan-yu-uitableview-zhong-cell-zi-gua-ying-gao-du-de-wen-ti/" class="read-more">Read More</a>
+    </article>
+  
+</div>
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

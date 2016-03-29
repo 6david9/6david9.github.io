@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>一个小的架构 – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="原文《A Little Architecture》 by Robert C. Martin (Uncle Bob)
+
+" />
+    <meta property="og:description" content="原文《A Little Architecture》 by Robert C. Martin (Uncle Bob)
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="一个小的架构" />
+    <meta property="twitter:title" content="一个小的架构" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>一个小的架构</h1>
+
+  <div class="entry">
+    <p>原文<a href="http://blog.cleancoder.com/uncle-bob/2016/01/04/ALittleArchitecture.html">《A Little Architecture》</a> by Robert C. Martin (Uncle Bob)</p>
+
+<p>我想要成为一个软件架构师。</p>
+
+<blockquote>
+  <p>对于年轻的软件开发工程师来说，那是一个好的目标。</p>
+</blockquote>
+
+<p>我想要领导一个团队，并决定使用什么数据库，框架和 web 服务器还有类似这些很重要的东西。</p>
+
+<blockquote>
+  <p>好吧，那你就不是想要成为一个软件架构师。</p>
+</blockquote>
+
+<p>是真的！我想要成为做所有重要决定的那个人。</p>
+
+<blockquote>
+  <p>好吧，但是你没有列出那些重要的决定。你提到的都是一些不相关的事情。</p>
+</blockquote>
+
+<p>什么意思？数据库不是重要的决定？你知道我们每年要在上面要花掉多少钱吗？</p>
+
+<blockquote>
+  <p>可能很多吧。但数据库也不是最重要的决定。</p>
+</blockquote>
+
+<p>为什么？数据库是整个系统的核心！在那里数据被组织，排序，索引并被访问。没有数据库就没有系统！</p>
+
+<blockquote>
+  <p>数据库仅仅是个 IO 设备。它只是碰巧提供了一些有用的工具用于排序，查询还有报告。但是相对于系统架构这些只是辅助功能（ancillary）。</p>
+</blockquote>
+
+<p>辅助功能？这太扯了。</p>
+
+<blockquote>
+  <p>是的，只是辅助功能。你系统的业务逻辑（business rules）可能会使用到一些这类工具；但这些工具不是业务逻辑。如果你愿意，你可以使用别的工具替代这些工具；但是你的业务逻辑还是之前那样，没有改变。</p>
+</blockquote>
+
+<p>好吧，是那样的，但我不得不把那些之前使用数据库的代码重写一遍。</p>
+
+<blockquote>
+  <p>嗯，但那是你的问题。</p>
+</blockquote>
+
+<p>怎么讲？</p>
+
+<blockquote>
+  <p>你的问题是，你相信业务逻辑依赖数据库这些工具的使用。但不是这样的。至少是如果你提供了一个好的架构是不应该这样的。</p>
+</blockquote>
+
+<p>我不明白。怎么才能创建一个业务逻辑，不依赖使用到的工具？</p>
+
+<blockquote>
+  <p>我不是说他们不使用数据库的这些工具；我说的是他们不应该依赖这些工具。业务逻辑不应该知道你使用的是哪种数据库。</p>
+</blockquote>
+
+<p>怎么才能让业务逻辑使用到这些工具但是不知道他们呢？</p>
+
+<blockquote>
+  <p>你可以反转这些依赖关系。让数据库依赖业务逻辑。并确保业务逻辑不依赖数据库。</p>
+</blockquote>
+
+<p>你在说什么鬼话？</p>
+
+<blockquote>
+  <p>相反的，我说的是软件架构的语言。这就是依赖反转的原则（Dependency Inversion Principle）。低层的策略应该倚赖上层的策略。</p>
+</blockquote>
+
+<p>在胡说什么！高层的策略（假设是你说的业务逻辑）调用低层策略（假设是你说的数据库）。那么高层的策略依赖低层的策略，就像调用者依赖被调用者。大家都知道这点！</p>
+
+<blockquote>
+  <p>在运行时是这样的。但是在编译时我们想要把依赖反转。高层策略的代码不应该声明低层策略中代码。</p>
+</blockquote>
+
+<p>哦，得了！你不可能不声明他就调用它。</p>
+
+<blockquote>
+  <p>当然可以。这就是面相对象所要处理的。</p>
+</blockquote>
+
+<p>面相对象是关于创建真实世界的模型，把数据和方法整合进相关的对象中。以更直观的结构组织代码。</p>
+
+<blockquote>
+  <p>这就是他们告诉你的？</p>
+</blockquote>
+
+<p>大家都知道。很明显就是这样的。</p>
+
+<blockquote>
+  <p>没问题。当然没问题。而且，使用面相对象的原则你就可以在不声明它的时候调用某些方法。</p>
+</blockquote>
+
+<p>好吧。怎么做？</p>
+
+<blockquote>
+  <p>你知道使用面相对象设计的对象们相互之间发送消息吗？</p>
+</blockquote>
+
+<p>是的，当然知道。</p>
+
+<blockquote>
+  <p>并且也知道消息的发送者并不知道接受者的确切类型。</p>
+</blockquote>
+
+<p>这和语言有关。对于 Java 语言来说发送者至少要知道接收者的基本类型。对于 Ruby 语言来说发送者至少要知道接收者是否可以处理被发送的消息。</p>
+
+<blockquote>
+  <p>是这样的。但是对这两种情况，发送者都不需要知道接收者的确切类型。</p>
+</blockquote>
+
+<p>对，是这样的。</p>
+
+<blockquote>
+  <p>因为这样，发送者就可以让接收者在内部执行一个方法，而不必要声明接收者的确切类型。</p>
+</blockquote>
+
+<p>没错。我知道这个。但是发送者仍旧依赖接收者。</p>
+
+<blockquote>
+  <p>在运行时，是这样的。但是在编译时不是这样。发送者的源代码既没有声明也没有依赖接收者的源代码。实际上是接收者的源代码依赖发送者的源代码。</p>
+</blockquote>
+
+<p>不！发送者仍旧依赖他要发送消息的那个类。</p>
+
+<blockquote>
+  <p>可能看些代码会更清楚些。我会用 Java 实现。首先是 sender 包：</p>
+</blockquote>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>package sender;
+
+public class Sender {
+	private Receiver receiver;
+
+	public Sender(Receiver r) {
+		receiver = r;
+	}
+
+	public void doSomething() {
+		receiver.receiveThis();
+	}
+
+	public interface Receiver {
+		void receiveThis();
+	}
+}
+</code></pre>
+</div>
+
+<blockquote>
+  <p>接着是 receiver 包。</p>
+</blockquote>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>package receiver;
+
+import sender.Sender;
+
+public class SpecificReceiver implements Sender.Receiver {
+	public void receiveThis() {
+		//do something interesting.
+	}
+}
+</code></pre>
+</div>
+
+<blockquote>
+  <p>注意下 receiver 包依赖 sender 包。同样的 SpecificReceiver 依赖 Sender。注意下，sender 包一点也不知道 receiver 包。</p>
+</blockquote>
+
+<p>好吧，但你耍赖了。你把 receiver 的 interface 放到了 sender 的类中。</p>
+
+<blockquote>
+  <p>你开始明白了，年轻人。</p>
+</blockquote>
+
+<p>明白什么？</p>
+
+<blockquote>
+  <p>架构的原则。发送者包含有接收者必须要实现的接口（interface）。</p>
+</blockquote>
+
+<p>好吧，要是这意味着我不得不实现一个嵌套类，那么……</p>
+
+<blockquote>
+  <p>嵌套类只是实现的一种方式。还有好多种其他的。</p>
+</blockquote>
+
+<p>好吧，等等。这和数据库有什么关系。这才是我们最开始讨论的。</p>
+
+<blockquote>
+  <p>让我们再多看些代码。首先是一个简单的业务逻辑：</p>
+</blockquote>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>package businessRules;
+
+import entities.Something;
+
+public class BusinessRule {
+	private BusinessRuleGateway gateway;
+
+	public BusinessRule(BusinessRuleGateway gateway) {
+		this.gateway = gateway;
+	}
+
+	public void execute(String id) {
+		gateway.startTransaction();
+		Something thing = gateway.getSomething(id);
+		thing.makeChanges();
+		gateway.saveSomething(thing);
+		gateway.endTransaction();
+	}
+}
+</code></pre>
+</div>
+
+<p>这个业务逻辑也没做什么啊。</p>
+
+<blockquote>
+  <p>这只是个例子。你可能有很多像这样的类，实现了很多不同的业务逻辑。</p>
+</blockquote>
+
+<p>好吧，那么那个 Gateway 是干什么的？</p>
+
+<blockquote>
+  <p>它为业务逻辑提供所有的数据访问方法。这是它的实现：</p>
+</blockquote>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>package businessRules;
+
+import entities.Something;
+
+public interface BusinessRuleGateway {
+	Something getSomething(String id);
+	void startTransaction();
+	void saveSomething(Something thing);
+	void endTransaction();
+}
+</code></pre>
+</div>
+
+<blockquote>
+  <p>注意，这个在 businessRules 包中。</p>
+</blockquote>
+
+<p>好吧。Something 类是什么？</p>
+
+<blockquote>
+  <p>那个代表一个简单的业务对象。我把它放进了一个叫 entities 的包中。</p>
+</blockquote>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>package entities;
+
+public class Something {
+	public void makeChanges() {
+		//...
+	}
+}
+</code></pre>
+</div>
+
+<blockquote>
+  <p>最后这个是 BusinessRuleGateway 的实现。这是知道真实的数据库的那个类：</p>
+</blockquote>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>package database;
+
+import businessRules.BusinessRuleGateway;
+import entities.Something;
+
+public class MySqlBusinessRuleGateway implements BusinessRuleGateway {
+	public Something getSomething(String id) {
+		// use MySql to get a thing.
+	}
+
+	public void startTransaction() {
+		// start MySql transaction
+	}
+
+	public void saveSomething(Something thing) {
+		// save thing in MySql
+	}
+
+	public void endTransaction() {
+		// end MySql transaction
+	}
+}
+</code></pre>
+</div>
+
+<blockquote>
+  <p>然后，注意这个，在运行时业务逻辑调用数据库；但是在编译时 database 包声明它依赖 businessRules 包。</p>
+</blockquote>
+
+<p>好吧，好吧，我想我知道了。你只是使用多态从业务逻辑中隐藏了数据库的实现。但是你还是得有一个接口(interface)提供全部的数据库工具给业务逻辑。</p>
+
+<blockquote>
+  <p>对，但也不完全正确。我们不用尝试把全部的数据库工具都提供给业务逻辑。而是，我们让业务逻辑创建他们需要的接口。这些接口的实现可以调用适合的工具。</p>
+</blockquote>
+
+<p>好吧，但要是全部的业务逻辑需要所有的工具，那么你就不得不把所有的工具都放到 gateway 接口中。</p>
+
+<blockquote>
+  <p>额，我猜你还没明白。</p>
+</blockquote>
+
+<p>明白什么？我很清楚。</p>
+
+<blockquote>
+  <p>每一条业务逻辑只规定了自己访问数据需要的接口。</p>
+</blockquote>
+
+<p>等等。什么？</p>
+
+<blockquote>
+  <p>这叫做接口隔离原则（Interface Segregation Principle）。每个业务逻辑的类，只使用了数据库的一部分功能。那么每个业务逻辑只需要定义接口提供自己访问数据所需要的功能。</p>
+</blockquote>
+
+<p>但那意味着你将要多写好多的接口，还有好多小的实现类调用其他的数据库类。</p>
+
+<blockquote>
+  <p>嗯，很好。我看你开始明白了。</p>
+</blockquote>
+
+<p>但是那真是一团糟，还浪费时间！我为什么要这么做？</p>
+
+<blockquote>
+  <p>你这么做是为了保持整洁，还有节省时间。</p>
+</blockquote>
+
+<p>哦，得了。这只是为了写代码而写代码。</p>
+
+<blockquote>
+  <p>相反的，这些是重要的架构决定，可以让你推迟做一些无关紧要的决定（irrelevant decisions）。</p>
+</blockquote>
+
+<p>什么意思？</p>
+
+<blockquote>
+  <p>还记得你开始说的想要成为一个软件架构师吗？你想要做所有重要的决定？</p>
+</blockquote>
+
+<p>是的，我是这么想的。</p>
+
+<blockquote>
+  <p>在这些决定中，你想决定的是数据库，web 服务器和框架相关的。</p>
+</blockquote>
+
+<p>没错，但你说这些不是重要的决定。你说它们是无关紧要的。</p>
+
+<blockquote>
+  <p>没错。就是这样。软件架构师的重要决定就是让你不用决定使用哪种数据库，web 服务器，还有框架。</p>
+</blockquote>
+
+<p>但是你得先做这些决定啊！</p>
+
+<blockquote>
+  <p>不需要。事实上，你需要在之后的开发循环中再决定 —— 当你有更多的信息。</p>
+</blockquote>
+
+<blockquote>
+  <p>有一个架构师叫 Woe， 过早的决定使用数据库，但是最终发现使用 flat file 就够用了。</p>
+</blockquote>
+
+<blockquote>
+  <p>有一个架构师叫 Woe，过早的决定使用 web 服务器，但最终发现团队需要的只是一个简单的 socket 接口。</p>
+</blockquote>
+
+<blockquote>
+  <p>有一个团队叫 Woe，它们的架构师过早的引入了一个框架，最后发现这个框架提供的功能他们根本就用不到，还引入了一些新的限制。</p>
+</blockquote>
+
+<blockquote>
+  <p>有一个团队叫 Blessed，他们的架构师提供了一种方法可以在信息明朗之后再做这些决定。</p>
+</blockquote>
+
+<blockquote>
+  <p>有一个团队叫 Blessed，他们的架构师把他们从低速的，资源不足的 IO 设备还有框架中隔离，这样他们就能创建快速的，轻量级的测试环境。</p>
+</blockquote>
+
+<blockquote>
+  <p>有一个叫 Blessed 的团队，他们的架构师关注的是真正重要的事情，把那些不重要的事情放到了一边。</p>
+</blockquote>
+
+<p>尽胡说。我跟本不明白你在说什么。</p>
+
+<blockquote>
+  <p>好吧，可能十年之后你就会明白…… 要是那时你还没转行去做管理</p>
+</blockquote>
+
+  </div>
+
+  <div class="date">
+    Written on January 21, 2016
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

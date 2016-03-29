@@ -1,0 +1,767 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.2">Jekyll</generator><link href="http://blog.cocoabit.com/feed.xml" rel="self" type="application/atom+xml" /><link href="http://blog.cocoabit.com/" rel="alternate" type="text/html" /><updated>2016-03-30T00:57:33+08:00</updated><id>http://blog.cocoabit.com/</id><title>Cocoabit</title><subtitle>Less but Better!</subtitle><entry><title>git tag</title><link href="http://blog.cocoabit.com/git-tag/" rel="alternate" type="text/html" title="git tag" /><published>2016-03-10T00:00:00+08:00</published><updated>2016-03-10T00:00:00+08:00</updated><id>http://blog.cocoabit.com/git-tag</id><content type="html" xml:base="http://blog.cocoabit.com/git-tag/">&lt;p&gt;git 的 tag 分为两种类型：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Lightweight Tags&lt;/li&gt;
+  &lt;li&gt;Annotated Tags&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&quot;lightweight-tags&quot;&gt;Lightweight Tags&lt;/h2&gt;
+&lt;p&gt;只是保存了一个指向某次 commit 的指针。使用 git show 命令查看只有最后一次 commit 的记录信息。&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git show v1.4-lw
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon &amp;lt;schacon@gee-mail.com&amp;gt;
+Date:   Mon Mar 17 21:52:11 2008 -0700
+
+  changed the version number
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;annotated-tags&quot;&gt;Annotated Tags&lt;/h2&gt;
+&lt;p&gt;包含完整的全部提交记录，包含创建 tag 人的信息（用户名，邮件等），创建 tag 的时间，还有备注信息。&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git show v1.4
+tag v1.4
+Tagger: Ben Straub &amp;lt;ben@straub.cc&amp;gt;
+Date:   Sat May 3 20:19:12 2014 -0700
+
+my version 1.4
+
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon &amp;lt;schacon@gee-mail.com&amp;gt;
+Date:   Mon Mar 17 21:52:11 2008 -0700
+
+	changed the version number
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;tag&quot;&gt;如何创建 tag&lt;/h2&gt;
+&lt;p&gt;创建 lightweight tag 直接用&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git tag v1.4   # v1.4 可以替换为自己制定的版本
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;创建 annotated tag:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git tag -a v1.4 -m &quot;my version 1.4&quot; # 多了一个 -a 参数
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;要是写成:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git tag v1.4 -m &quot;my version 1.4&quot;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;虽然没有 -a 但是因为有 -m 也会隐式的创建 annotated tag。&lt;/p&gt;
+
+&lt;h2 id=&quot;push-tag--repo-&quot;&gt;push tag 到远程 repo 中&lt;/h2&gt;
+&lt;p&gt;默认情况下 git push 不会把 tag push 到远程 repo 中，所以需要手动提交&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git push origin v1.4
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;要是需要一次 push 全部的 tag 到远程的 repo 可以&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git push origin --tags
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;checkout--tag&quot;&gt;checkout 某个 tag&lt;/h2&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git checkout -b version2 v2.0.0
+Switched to a new branch &#39;version2&#39;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h2 id=&quot;tag-1&quot;&gt;删除 tag&lt;/h2&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;$ git tag -d release01
+$ git push origin :refs/tags/release01
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;h3 id=&quot;section&quot;&gt;参考：&lt;/h3&gt;
+&lt;p&gt;https://git-scm.com/book/en/v2/Git-Basics-Tagging&lt;/p&gt;
+
+&lt;p&gt;https://confluence.atlassian.com/bitbucket/how-do-i-remove-or-delete-a-tag-from-a-git-repo-282175551.html&lt;/p&gt;</content><summary>git 的 tag 分为两种类型：</summary></entry><entry><title>git 变更已经提交的 commit 的 author</title><link href="http://blog.cocoabit.com/git-change-author/" rel="alternate" type="text/html" title="git 变更已经提交的 commit 的 author" /><published>2016-02-27T00:00:00+08:00</published><updated>2016-02-27T00:00:00+08:00</updated><id>http://blog.cocoabit.com/git-change-author</id><content type="html" xml:base="http://blog.cocoabit.com/git-change-author/">&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;git filter-branch --commit-filter &#39;
+	if [ &quot;$GIT_COMMITTER_NAME&quot; = &quot;&amp;lt; Old Name &amp;gt;&quot; ];
+	then
+		GIT_COMMITTER_NAME=&quot;&amp;lt; New Name &amp;gt;&quot;;
+		GIT_AUTHOR_NAME=&quot;&amp;lt; New Name &amp;gt;&quot;;
+		GIT_COMMITTER_EMAIL=&quot;&amp;lt; New Email &amp;gt;&quot;;
+		GIT_AUTHOR_EMAIL=&quot;&amp;lt; New Email &amp;gt;&quot;;
+		git commit-tree &quot;$@&quot;;
+	else
+		git commit-tree &quot;$@&quot;;
+	fi&#39; HEAD
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;From:&lt;a href=&quot;http://stackoverflow.com/a/870367/892056&quot;&gt;http://stackoverflow.com/a/870367/892056&lt;/a&gt;&lt;/p&gt;</content><summary>git filter-branch --commit-filter &#39;
+	if [ &quot;$GIT_COMMITTER_NAME&quot; = &quot;&amp;lt; Old Name &amp;gt;&quot; ];
+	then
+		GIT_COMMITTER_NAME=&quot;&amp;lt; New Name &amp;gt;&quot;;
+		GIT_AUTHOR_NAME=&quot;&amp;lt; New Name &amp;gt;&quot;;
+		GIT_COMMITTER_EMAIL=&quot;&amp;lt; New Email &amp;gt;&quot;;
+		GIT_AUTHOR_EMAIL=&quot;&amp;lt; New Email &amp;gt;&quot;;
+		git commit-tree &quot;$@&quot;;
+	else
+		git commit-tree &quot;$@&quot;;
+	fi&#39; HEAD</summary></entry><entry><title>翻转单向列表</title><link href="http://blog.cocoabit.com/fan-zhuan-dan-xiang-lie-biao/" rel="alternate" type="text/html" title="翻转单向列表" /><published>2016-02-26T00:00:00+08:00</published><updated>2016-02-26T00:00:00+08:00</updated><id>http://blog.cocoabit.com/fan-zhuan-dan-xiang-lie-biao</id><content type="html" xml:base="http://blog.cocoabit.com/fan-zhuan-dan-xiang-lie-biao/">&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;amp;lt;stdio.h&amp;amp;gt;
+#include &amp;amp;lt;stdlib.h&amp;amp;gt;
+
+struct Node {
+	int value;
+	struct Node *next;
+};
+
+struct List {
+	struct Node *First;
+	struct Node *Last;
+};
+
+struct List *list_create()
+{	
+	struct List *list = (struct List *)malloc(sizeof(struct List));
+	list-&amp;gt;First = NULL;
+	list-&amp;gt;Last = NULL;
+	
+	return list;
+}
+
+void list_free(struct List *list)
+{
+	if (list == NULL || list-&amp;gt;First == NULL) {
+		return;
+	}
+	
+	struct Node *p = NULL;
+	
+	do {
+		p = list-&amp;gt;First-&amp;gt;next;
+		printf(&quot;free %d\n&quot;, list-&amp;gt;First-&amp;gt;value);
+		free(list-&amp;gt;First);
+		list-&amp;gt;First = p;	
+	} while (p != NULL);
+	
+	free(list);
+}
+
+void list_append(struct List *list, int value)
+{
+	struct Node *node = (struct Node *)malloc(sizeof(struct Node));
+	node-&amp;gt;value = value;
+	node-&amp;gt;next = NULL;
+		
+	if (list-&amp;gt;First == NULL) {
+		list-&amp;gt;First = node;
+	} 
+	else {
+		list-&amp;gt;Last-&amp;gt;next = node;	
+	}
+        list-&amp;gt;Last = node;
+}
+
+void list_print(struct List *list) 
+{
+	struct Node *p = list-&amp;gt;First;
+	while (p != NULL) {
+		printf(&quot;%d\n&quot;, p-&amp;gt;value);
+		p = p-&amp;gt;next;
+	}
+}
+
+void list_reverse(struct List *list) 
+{
+	if (list == NULL || list-&amp;gt;First == NULL || list-&amp;gt;First-&amp;gt;next == NULL) {
+		return;
+	}
+	
+	struct Node *p = list-&amp;gt;First;
+	struct Node *q = list-&amp;gt;First-&amp;gt;next;
+	struct Node *n = q-&amp;gt;next;
+	list-&amp;gt;Last = list-&amp;gt;First;
+	
+	while (1) {
+		q-&amp;gt;next = p;
+		
+		if (n == NULL) {
+			list-&amp;gt;First = q;
+			break;
+		}
+		
+		p = q;
+		q = n;
+		n = q-&amp;gt;next;
+	}
+	
+	list-&amp;gt;Last-&amp;gt;next = NULL;
+}
+
+void list_reverse_two_node(struct List *list, struct Node *first, struct Node *second)
+{
+	if (second == NULL) {
+		list-&amp;gt;First = first;
+		return;
+	}
+	
+	struct Node *third = second-&amp;gt;next;
+	second-&amp;gt;next = first;
+	
+	list_reverse_two_node(list, second, third);
+}
+
+void list_reverse2(struct List *list)
+{
+	if (list == NULL || list-&amp;gt;First == NULL || list-&amp;gt;First-&amp;gt;next == NULL) {
+		return;
+	}
+	
+	list-&amp;gt;Last = list-&amp;gt;First;
+	list_reverse_two_node(list, list-&amp;gt;First, list-&amp;gt;First-&amp;gt;next);
+	list-&amp;gt;Last-&amp;gt;next = NULL;
+}
+
+int main(int argc, char *argv[]) {
+	struct List *list = list_create();
+	
+	list_append(list, 1);
+	list_append(list, 2);
+	list_append(list, 3);
+	list_append(list, 4);
+	list_append(list, 5);
+	list_append(list, 6);
+	
+	list_print(list);
+	puts(&quot;---------------------------&quot;);
+	
+	list_reverse(list);
+	list_print(list);
+	puts(&quot;---------------------------&quot;);
+	
+	list_reverse(list);
+	list_print(list);
+	puts(&quot;---------------------------&quot;);
+	
+	list_free(list);
+	
+	return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;输出结果：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1
+2
+3
+4
+5
+6
+
+---------------------------
+
+6
+5
+4
+3
+2
+1
+
+---------------------------
+
+1
+2
+3
+4
+5
+6
+
+---------------------------
+
+free 1
+free 2
+free 3
+free 4
+free 5
+free 6
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><summary>#include &amp;amp;lt;stdio.h&amp;amp;gt;
+#include &amp;amp;lt;stdlib.h&amp;amp;gt;</summary></entry><entry><title>iOS 隐藏键盘</title><link href="http://blog.cocoabit.com/ios-dismiss-keyboard/" rel="alternate" type="text/html" title="iOS 隐藏键盘" /><published>2016-02-19T00:00:00+08:00</published><updated>2016-02-19T00:00:00+08:00</updated><id>http://blog.cocoabit.com/ios-dismiss-keyboard</id><content type="html" xml:base="http://blog.cocoabit.com/ios-dismiss-keyboard/">&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[textView resignFirstResponder];
+或者
+[[[UIApplication sharedApplication] keyWindow] endEditing:YES];
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><summary>[textView resignFirstResponder];
+或者
+[[[UIApplication sharedApplication] keyWindow] endEditing:YES];</summary></entry><entry><title>Objective-C 使用大小写分割字符串</title><link href="http://blog.cocoabit.com/objective-c-split-by-capitalize/" rel="alternate" type="text/html" title="Objective-C 使用大小写分割字符串" /><published>2016-02-17T00:00:00+08:00</published><updated>2016-02-17T00:00:00+08:00</updated><id>http://blog.cocoabit.com/objective-c-split-by-capitalize</id><content type="html" xml:base="http://blog.cocoabit.com/objective-c-split-by-capitalize/">&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;NSString *string = @&quot;ThisStringIsJoined&quot;;
+NSRegularExpression *regexp = [NSRegularExpression 
+	regularExpressionWithPattern:@&quot;([a-z])([A-Z])&quot; 
+	options:0 
+	error:NULL];
+NSString *newString = [regexp 
+	stringByReplacingMatchesInString:string 
+	options:0 
+	range:NSMakeRange(0, string.length) 
+	withTemplate:@&quot;$1 $2&quot;];
+NSLog(@&quot;Changed &#39;%@&#39; -&amp;gt; &#39;%@&#39;&quot;, string, newString);
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;输出：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&#39;ThisStringIsJoined&#39; -&amp;gt; &#39;This String Is Joined&#39;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;From: &lt;a href=&quot;http://stackoverflow.com/a/7322720/892056&quot;&gt;http://stackoverflow.com/a/7322720/892056&lt;/a&gt;&lt;/p&gt;</content><summary>NSString *string = @&quot;ThisStringIsJoined&quot;;
+NSRegularExpression *regexp = [NSRegularExpression 
+	regularExpressionWithPattern:@&quot;([a-z])([A-Z])&quot; 
+	options:0 
+	error:NULL];
+NSString *newString = [regexp 
+	stringByReplacingMatchesInString:string 
+	options:0 
+	range:NSMakeRange(0, string.length) 
+	withTemplate:@&quot;$1 $2&quot;];
+NSLog(@&quot;Changed &#39;%@&#39; -&amp;gt; &#39;%@&#39;&quot;, string, newString);</summary></entry><entry><title>一个小的架构</title><link href="http://blog.cocoabit.com/a-little-architecture/" rel="alternate" type="text/html" title="一个小的架构" /><published>2016-01-21T00:00:00+08:00</published><updated>2016-01-21T00:00:00+08:00</updated><id>http://blog.cocoabit.com/a-little-architecture</id><content type="html" xml:base="http://blog.cocoabit.com/a-little-architecture/">&lt;p&gt;原文&lt;a href=&quot;http://blog.cleancoder.com/uncle-bob/2016/01/04/ALittleArchitecture.html&quot;&gt;《A Little Architecture》&lt;/a&gt; by Robert C. Martin (Uncle Bob)&lt;/p&gt;
+
+&lt;p&gt;我想要成为一个软件架构师。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;对于年轻的软件开发工程师来说，那是一个好的目标。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;我想要领导一个团队，并决定使用什么数据库，框架和 web 服务器还有类似这些很重要的东西。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;好吧，那你就不是想要成为一个软件架构师。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;是真的！我想要成为做所有重要决定的那个人。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;好吧，但是你没有列出那些重要的决定。你提到的都是一些不相关的事情。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;什么意思？数据库不是重要的决定？你知道我们每年要在上面要花掉多少钱吗？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;可能很多吧。但数据库也不是最重要的决定。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;为什么？数据库是整个系统的核心！在那里数据被组织，排序，索引并被访问。没有数据库就没有系统！&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;数据库仅仅是个 IO 设备。它只是碰巧提供了一些有用的工具用于排序，查询还有报告。但是相对于系统架构这些只是辅助功能（ancillary）。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;辅助功能？这太扯了。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;是的，只是辅助功能。你系统的业务逻辑（business rules）可能会使用到一些这类工具；但这些工具不是业务逻辑。如果你愿意，你可以使用别的工具替代这些工具；但是你的业务逻辑还是之前那样，没有改变。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧，是那样的，但我不得不把那些之前使用数据库的代码重写一遍。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;嗯，但那是你的问题。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;怎么讲？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;你的问题是，你相信业务逻辑依赖数据库这些工具的使用。但不是这样的。至少是如果你提供了一个好的架构是不应该这样的。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;我不明白。怎么才能创建一个业务逻辑，不依赖使用到的工具？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;我不是说他们不使用数据库的这些工具；我说的是他们不应该依赖这些工具。业务逻辑不应该知道你使用的是哪种数据库。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;怎么才能让业务逻辑使用到这些工具但是不知道他们呢？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;你可以反转这些依赖关系。让数据库依赖业务逻辑。并确保业务逻辑不依赖数据库。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;你在说什么鬼话？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;相反的，我说的是软件架构的语言。这就是依赖反转的原则（Dependency Inversion Principle）。低层的策略应该倚赖上层的策略。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;在胡说什么！高层的策略（假设是你说的业务逻辑）调用低层策略（假设是你说的数据库）。那么高层的策略依赖低层的策略，就像调用者依赖被调用者。大家都知道这点！&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;在运行时是这样的。但是在编译时我们想要把依赖反转。高层策略的代码不应该声明低层策略中代码。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;哦，得了！你不可能不声明他就调用它。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;当然可以。这就是面相对象所要处理的。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;面相对象是关于创建真实世界的模型，把数据和方法整合进相关的对象中。以更直观的结构组织代码。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;这就是他们告诉你的？&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;大家都知道。很明显就是这样的。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;没问题。当然没问题。而且，使用面相对象的原则你就可以在不声明它的时候调用某些方法。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧。怎么做？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;你知道使用面相对象设计的对象们相互之间发送消息吗？&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;是的，当然知道。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;并且也知道消息的发送者并不知道接受者的确切类型。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;这和语言有关。对于 Java 语言来说发送者至少要知道接收者的基本类型。对于 Ruby 语言来说发送者至少要知道接收者是否可以处理被发送的消息。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;是这样的。但是对这两种情况，发送者都不需要知道接收者的确切类型。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;对，是这样的。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;因为这样，发送者就可以让接收者在内部执行一个方法，而不必要声明接收者的确切类型。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;没错。我知道这个。但是发送者仍旧依赖接收者。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;在运行时，是这样的。但是在编译时不是这样。发送者的源代码既没有声明也没有依赖接收者的源代码。实际上是接收者的源代码依赖发送者的源代码。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;不！发送者仍旧依赖他要发送消息的那个类。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;可能看些代码会更清楚些。我会用 Java 实现。首先是 sender 包：&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;package sender;
+
+public class Sender {
+	private Receiver receiver;
+
+	public Sender(Receiver r) {
+		receiver = r;
+	}
+
+	public void doSomething() {
+		receiver.receiveThis();
+	}
+
+	public interface Receiver {
+		void receiveThis();
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;接着是 receiver 包。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;package receiver;
+
+import sender.Sender;
+
+public class SpecificReceiver implements Sender.Receiver {
+	public void receiveThis() {
+		//do something interesting.
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;注意下 receiver 包依赖 sender 包。同样的 SpecificReceiver 依赖 Sender。注意下，sender 包一点也不知道 receiver 包。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧，但你耍赖了。你把 receiver 的 interface 放到了 sender 的类中。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;你开始明白了，年轻人。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;明白什么？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;架构的原则。发送者包含有接收者必须要实现的接口（interface）。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧，要是这意味着我不得不实现一个嵌套类，那么……&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;嵌套类只是实现的一种方式。还有好多种其他的。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧，等等。这和数据库有什么关系。这才是我们最开始讨论的。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;让我们再多看些代码。首先是一个简单的业务逻辑：&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;package businessRules;
+
+import entities.Something;
+
+public class BusinessRule {
+	private BusinessRuleGateway gateway;
+
+	public BusinessRule(BusinessRuleGateway gateway) {
+		this.gateway = gateway;
+	}
+
+	public void execute(String id) {
+		gateway.startTransaction();
+		Something thing = gateway.getSomething(id);
+		thing.makeChanges();
+		gateway.saveSomething(thing);
+		gateway.endTransaction();
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;这个业务逻辑也没做什么啊。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;这只是个例子。你可能有很多像这样的类，实现了很多不同的业务逻辑。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧，那么那个 Gateway 是干什么的？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;它为业务逻辑提供所有的数据访问方法。这是它的实现：&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;package businessRules;
+
+import entities.Something;
+
+public interface BusinessRuleGateway {
+	Something getSomething(String id);
+	void startTransaction();
+	void saveSomething(Something thing);
+	void endTransaction();
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;注意，这个在 businessRules 包中。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧。Something 类是什么？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;那个代表一个简单的业务对象。我把它放进了一个叫 entities 的包中。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;package entities;
+
+public class Something {
+	public void makeChanges() {
+		//...
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;最后这个是 BusinessRuleGateway 的实现。这是知道真实的数据库的那个类：&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;package database;
+
+import businessRules.BusinessRuleGateway;
+import entities.Something;
+
+public class MySqlBusinessRuleGateway implements BusinessRuleGateway {
+	public Something getSomething(String id) {
+		// use MySql to get a thing.
+	}
+
+	public void startTransaction() {
+		// start MySql transaction
+	}
+
+	public void saveSomething(Something thing) {
+		// save thing in MySql
+	}
+
+	public void endTransaction() {
+		// end MySql transaction
+	}
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;然后，注意这个，在运行时业务逻辑调用数据库；但是在编译时 database 包声明它依赖 businessRules 包。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧，好吧，我想我知道了。你只是使用多态从业务逻辑中隐藏了数据库的实现。但是你还是得有一个接口(interface)提供全部的数据库工具给业务逻辑。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;对，但也不完全正确。我们不用尝试把全部的数据库工具都提供给业务逻辑。而是，我们让业务逻辑创建他们需要的接口。这些接口的实现可以调用适合的工具。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;好吧，但要是全部的业务逻辑需要所有的工具，那么你就不得不把所有的工具都放到 gateway 接口中。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;额，我猜你还没明白。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;明白什么？我很清楚。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;每一条业务逻辑只规定了自己访问数据需要的接口。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;等等。什么？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;这叫做接口隔离原则（Interface Segregation Principle）。每个业务逻辑的类，只使用了数据库的一部分功能。那么每个业务逻辑只需要定义接口提供自己访问数据所需要的功能。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;但那意味着你将要多写好多的接口，还有好多小的实现类调用其他的数据库类。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;嗯，很好。我看你开始明白了。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;但是那真是一团糟，还浪费时间！我为什么要这么做？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;你这么做是为了保持整洁，还有节省时间。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;哦，得了。这只是为了写代码而写代码。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;相反的，这些是重要的架构决定，可以让你推迟做一些无关紧要的决定（irrelevant decisions）。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;什么意思？&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;还记得你开始说的想要成为一个软件架构师吗？你想要做所有重要的决定？&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;是的，我是这么想的。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;在这些决定中，你想决定的是数据库，web 服务器和框架相关的。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;没错，但你说这些不是重要的决定。你说它们是无关紧要的。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;没错。就是这样。软件架构师的重要决定就是让你不用决定使用哪种数据库，web 服务器，还有框架。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;但是你得先做这些决定啊！&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;不需要。事实上，你需要在之后的开发循环中再决定 —— 当你有更多的信息。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;有一个架构师叫 Woe， 过早的决定使用数据库，但是最终发现使用 flat file 就够用了。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;有一个架构师叫 Woe，过早的决定使用 web 服务器，但最终发现团队需要的只是一个简单的 socket 接口。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;有一个团队叫 Woe，它们的架构师过早的引入了一个框架，最后发现这个框架提供的功能他们根本就用不到，还引入了一些新的限制。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;有一个团队叫 Blessed，他们的架构师提供了一种方法可以在信息明朗之后再做这些决定。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;有一个团队叫 Blessed，他们的架构师把他们从低速的，资源不足的 IO 设备还有框架中隔离，这样他们就能创建快速的，轻量级的测试环境。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;有一个叫 Blessed 的团队，他们的架构师关注的是真正重要的事情，把那些不重要的事情放到了一边。&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;尽胡说。我跟本不明白你在说什么。&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;好吧，可能十年之后你就会明白…… 要是那时你还没转行去做管理&lt;/p&gt;
+&lt;/blockquote&gt;</content><summary>原文《A Little Architecture》 by Robert C. Martin (Uncle Bob)</summary></entry><entry><title>万年历计算星期-基姆拉尔森公式</title><link href="http://blog.cocoabit.com/mo-nian-li-ji-suan-xing-qi-ji-mu-la-er-sen-gong-shi/" rel="alternate" type="text/html" title="万年历计算星期-基姆拉尔森公式" /><published>2015-12-12T00:00:00+08:00</published><updated>2015-12-12T00:00:00+08:00</updated><id>http://blog.cocoabit.com/mo-nian-li-ji-suan-xing-qi-ji-mu-la-er-sen-gong-shi</id><content type="html" xml:base="http://blog.cocoabit.com/mo-nian-li-ji-suan-xing-qi-ji-mu-la-er-sen-gong-shi/">&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;#include &amp;lt;stdio.h&amp;gt;
+
+/* 
+* 基姆拉尔森计算公式
+* W= (d+2*m+3*(m+1)/5+y+y/4-y/100+y/400) mod 7
+*/
+int week(int y, int m, int d)
+{
+	if (m &amp;lt; 3) {
+		m += 12;
+		y--;
+	}
+	
+	int w = (d + 2 * m + 3 * (m + 1) / 5 + y + y / 4 - y / 100 + y / 400) % 7;
+	return w;
+}
+
+int main()
+{
+	printf(&quot;%d\n&quot;, week(2015, 4, 16));  // =&amp;gt; 3 星期四
+	printf(&quot;%d\n&quot;, week(1989, 2, 3));   // =&amp;gt; 4 星期五
+	
+	return 0;
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><summary>#include &amp;lt;stdio.h&amp;gt;</summary></entry><entry><title>Content-disposition中 attachment 和 inline 的区别</title><link href="http://blog.cocoabit.com/content-disposition/" rel="alternate" type="text/html" title="Content-disposition中 attachment 和 inline 的区别" /><published>2015-12-12T00:00:00+08:00</published><updated>2015-12-12T00:00:00+08:00</updated><id>http://blog.cocoabit.com/content-disposition</id><content type="html" xml:base="http://blog.cocoabit.com/content-disposition/">&lt;p&gt;Content-disposition: inline; filename=foobar.pdf
+表示浏览器内嵌显示一个文件&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Content-disposition: attachment; filename=foobar.pdf 表示会下载文件，在浏览器中弹窗下载
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><summary>Content-disposition: inline; filename=foobar.pdf
+表示浏览器内嵌显示一个文件</summary></entry><entry><title>Homebrew 列出可更新的软件</title><link href="http://blog.cocoabit.com/brew-list-upgradable/" rel="alternate" type="text/html" title="Homebrew 列出可更新的软件" /><published>2015-12-12T00:00:00+08:00</published><updated>2015-12-12T00:00:00+08:00</updated><id>http://blog.cocoabit.com/brew-list-upgradable</id><content type="html" xml:base="http://blog.cocoabit.com/brew-list-upgradable/">&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;brew outdated
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><summary>brew outdated</summary></entry><entry><title>App installation failed</title><link href="http://blog.cocoabit.com/app-installation-failed/" rel="alternate" type="text/html" title="App installation failed" /><published>2015-12-12T00:00:00+08:00</published><updated>2015-12-12T00:00:00+08:00</updated><id>http://blog.cocoabit.com/app-installation-failed</id><content type="html" xml:base="http://blog.cocoabit.com/app-installation-failed/">&lt;p&gt;最近用 XCode 真机调试的时候出现：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;A signed resource has been added, modified, or deleted.
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;没法安装应用到手机上，解决办法是直接删除项目 DerivedData 下的 .app 和 .appex ：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rm -rf ~/Library/Developer/Xcode/DerivedData/AppName-*/Build/Products/Debug-iphoneos/*.app
+rm -rf ~/Library/Developer/Xcode/DerivedData/AppName-*/Build/Products/Debug-iphoneos/*.appex
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;AppName 为项目名称。&lt;/p&gt;</content><summary>最近用 XCode 真机调试的时候出现：
+
+A signed resource has been added, modified, or deleted.
+
+
+
+没法安装应用到手机上，解决办法是直接删除项目 DerivedData 下的 .app 和 .appex ：</summary></entry></feed>

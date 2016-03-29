@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>【转】代码的坏味道 – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="转自：http://www.cnblogs.com/mywolrd/archive/2012/04/24/2467395.html
+
+" />
+    <meta property="og:description" content="转自：http://www.cnblogs.com/mywolrd/archive/2012/04/24/2467395.html
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="【转】代码的坏味道" />
+    <meta property="twitter:title" content="【转】代码的坏味道" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>【转】代码的坏味道</h1>
+
+  <div class="entry">
+    <p>转自：<a href="http://www.cnblogs.com/mywolrd/archive/2012/04/24/2467395.html">http://www.cnblogs.com/mywolrd/archive/2012/04/24/2467395.html</a></p>
+
+<p>代码坏味道：是指在代码之中潜在问题的警示信号。并非所有的坏味道所指示的确实是问题，但是对于大多数坏味道，均很有必要加以查看，并作出相应的修改。<br />
+## 1.重复的代码</p>
+
+<p>如果你在一个以上的地点看到相同的程序结构，那么当可肯定：设法将它们合而为一，程序会变得更好。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>同一个class内的两个函数中含有重复的代码段
+两个兄弟class的成员函数中含有重复的代码段
+两个毫不相关的class内出现重复的代码段
+</code></pre>
+</div>
+
+<p>注意：重复的代码是多数潜在BUG的温床！
+## 2.过长的函数</p>
+
+<p>拥有短函数的对象会活的比较好、比较长。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>程序愈长就愈难理解
+函数过长阅读起来也不方便
+小函数的价值：解释能力、共享能力、选择能力
+</code></pre>
+</div>
+
+<p>原则：每当感觉需要以注释来说明点什么的时候，我们就把需要说明的东西写进一个独立的函数中。记着，起个好名字！<br />
+## 3.过大类</p>
+
+<p>如果想利用单一类做太多事情，其内往往就会出现太多的成员变量。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>提取完成同一任务的相关变量到一个新的类
+干太多事情的类，可以考虑把责任委托给其他类
+</code></pre>
+</div>
+
+<p>注意：一个类如果拥有太多的代码，也是代码重复、混乱、死亡的绝佳滋生地点。<br />
+## 4.过长的参数列表</p>
+
+<p>太长的参数列表难以理解，太多参数会造成前后不一致、不易使用，而且你需要更多数据时，就不得不修改它。</p>
+
+<p>原则：参数不超过3个！<br />
+## 5.发散式变化</p>
+
+<p>我们希望软件能够更容易被修改。一旦需要修改，我们希望能够跳到系统的某一点，只在该处做修改。如果不能做到这点，你就嗅出“坏味道：发散式变化”或“坏味道：霰弹式修改”。</p>
+
+<p>发散式变化：一个类受多种变化的影响</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>数据库新加一个字段，同时修改三个函数：Load、Insert、Update
+新加一个角色二进制，同时修改四处
+…
+</code></pre>
+</div>
+
+<p>原则：针对某一外界变化的所有相应修改，都只应该发生在单一类中<br />
+## 6.霰弹式修改</p>
+
+<p>如果每遇到某种变化，你都必须在许多不同的类内做出许多小修改以响应之。如果需要修改的代码散布四处，你不但难以找到它们，也很容易忘记某个重要的修改。</p>
+
+<p>霰弹式修改：一种变化引起多个类相应的修改<br />
+## 7.依恋情节</p>
+
+<p>函数对某个类的兴趣高过对自己所处类的兴趣，就会产生对这个类的依恋情节，造成紧耦合。</p>
+
+<p>原则：判断哪个类拥有最多被此函数使用的数据，然后将这个函数和那些数据摆在一起。
+原则：将总是变化的东西放在一块。<br />
+## 8.数据泥团</p>
+
+<p>有些数据项，喜欢成群结队地待在一块。那就把它们绑起来放在一个新的类里面。这样就可以：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>缩短参数列表
+简化函数调用
+</code></pre>
+</div>
+
+<h2 id="section">9.基本型别偏执</h2>
+
+<p>代码中有很多基本数据类型的数据。</p>
+
+<p>原则：如果看到一些基本类型数据，尝试定义一种新的数据类型，符合它当前所代表的对象类型。<br />
+## 10.switch惊悚现身</p>
+
+<p>面向对象程序的一个最明显特征就是：少用switch语句。从本质上说，switch语句的问题在于重复。</p>
+
+<p>原则：看到switch你就应该考虑使用多态来替换它。<br />
+## 11.冗赘类</p>
+
+<p>你所创建的每一个类，都得有人去理解它、维护它，但一个类没有存在的必要时候，就让这个类庄严扑义吧！</p>
+
+<p>原则：如果一个类的所得不值其身价，它就应该消失。<br />
+## 12.夸夸其谈其未来性</p>
+
+<p>对未来不可预知的变化考虑的过多，造成系统更难理解和维护。如果应对变化的代码都会被用到，那是值得的那么做；如果用不到，就不值得。</p>
+
+<p>原则：代码应该满足当前的需求，并留有可扩展的余地。对于未来的变化，既不要考虑的太多，也不能一点都不考虑。<br />
+## 13.令人迷惑的暂时成员变量</p>
+
+<p>有时你会看到这样的对象：其内某个成员变量仅为某种特定的情形而设。这样的代码容易让人不解，因为你通常认为对象在所有时候都需要它的所有变量。</p>
+
+<p>在变量未被使用的情况下猜测当初设置目的，会让你发疯。<br />
+## 14.无用的中间人</p>
+
+<p>过度使用委托。你也许会看到某个类的接口有一半的函数都委托给其他类，这样就过度运用了。所以，删除无用的中间人。<br />
+## 15.狎昵关系</p>
+
+<p>有时你会看到两个类过于亲密，花费太多时间去探究彼此的private成分。</p>
+
+<p>原则：过分狎昵的类必须拆散。<br />
+## 16.异曲同工的类</p>
+
+<p>如果两个函数做同一件事情，却有着不同的签名式。</p>
+
+<p>原则：删除一个，保留一个。<br />
+## 17.不完美的程序库类</p>
+
+<p>库的设计有时会不够好，不那么容易使用，可能还会有那么一点小缺陷。</p>
+
+<p>工具：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>Introduce Foreign Method
+Introduce Local Extension
+</code></pre>
+</div>
+
+<h2 id="section-1">18.过多的注释</h2>
+
+<p>过多注释的代码段，往往都是因为那段代码比较糟糕，散发着一股恶臭。</p>
+
+<p>原则：当你感觉需要写注释时，请尝试重构，试着让所有注释都变得多余。</p>
+
+<h2 id="section-2">参考资料：</h2>
+<div class="highlighter-rouge"><pre class="highlight"><code>《重构：改善既有代码的设计》
+《重构手册》
+</code></pre>
+</div>
+
+  </div>
+
+  <div class="date">
+    Written on December 17, 2013
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

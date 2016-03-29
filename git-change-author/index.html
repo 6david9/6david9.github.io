@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>git 变更已经提交的 commit 的 author – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="git filter-branch --commit-filter '
+	if [ "$GIT_COMMITTER_NAME" = "&lt; Old Name &gt;" ];
+	then
+		GIT_COMMITTER_NAME="&lt; New Name &gt;";
+		GIT_AUTHOR_NAME="&lt; New Name &gt;";
+		GIT_COMMITTER_EMAIL="&lt; New Email &gt;";
+		GIT_AUTHOR_EMAIL="&lt; New Email &gt;";
+		git commit-tree "$@";
+	else
+		git commit-tree "$@";
+	fi' HEAD
+
+
+
+" />
+    <meta property="og:description" content="git filter-branch --commit-filter '
+	if [ "$GIT_COMMITTER_NAME" = "&lt; Old Name &gt;" ];
+	then
+		GIT_COMMITTER_NAME="&lt; New Name &gt;";
+		GIT_AUTHOR_NAME="&lt; New Name &gt;";
+		GIT_COMMITTER_EMAIL="&lt; New Email &gt;";
+		GIT_AUTHOR_EMAIL="&lt; New Email &gt;";
+		git commit-tree "$@";
+	else
+		git commit-tree "$@";
+	fi' HEAD
+
+
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="git 变更已经提交的 commit 的 author" />
+    <meta property="twitter:title" content="git 变更已经提交的 commit 的 author" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>git 变更已经提交的 commit 的 author</h1>
+
+  <div class="entry">
+    <div class="highlighter-rouge"><pre class="highlight"><code>git filter-branch --commit-filter '
+	if [ "$GIT_COMMITTER_NAME" = "&lt; Old Name &gt;" ];
+	then
+		GIT_COMMITTER_NAME="&lt; New Name &gt;";
+		GIT_AUTHOR_NAME="&lt; New Name &gt;";
+		GIT_COMMITTER_EMAIL="&lt; New Email &gt;";
+		GIT_AUTHOR_EMAIL="&lt; New Email &gt;";
+		git commit-tree "$@";
+	else
+		git commit-tree "$@";
+	fi' HEAD
+</code></pre>
+</div>
+
+<p>From:<a href="http://stackoverflow.com/a/870367/892056">http://stackoverflow.com/a/870367/892056</a></p>
+
+  </div>
+
+  <div class="date">
+    Written on February 27, 2016
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

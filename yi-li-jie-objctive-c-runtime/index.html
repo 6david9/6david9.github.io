@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>【译】理解 Objective-C Runtime – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="原文 Understanding the Objective-C Runtime
+
+" />
+    <meta property="og:description" content="原文 Understanding the Objective-C Runtime
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="【译】理解 Objective-C Runtime" />
+    <meta property="twitter:title" content="【译】理解 Objective-C Runtime" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>【译】理解 Objective-C Runtime</h1>
+
+  <div class="entry">
+    <p>原文 <a href="http://cocoasamurai.blogspot.jp/2010/01/understanding-objective-c-runtime.html">Understanding the Objective-C Runtime</a></p>
+
+<p>当人们初学 Cocoa/Objective-C 时，Objective-C Runtime 是被忽略的特性之一。原因是 Objective-C（这门语言）很容易在几小时内就熟悉，新学 Cocoa 的人花费他们大部分的时间学习 Cocoa 框架和适应它是如何工作的。然而每个人至少应该知道一些 runtime 的工作细节，需要比知道编译器会把 [target doMethodWith:var1]; 转换为 objc_msgSend(target,@selector(doMethodWith:),var1); 更深入一些。知道 Objective-C 正在做的会让你更深入的理解 Objective-C 和你正在运行的 app。我认为 Mac/iPhone 的开发者不管你现在是什么水平，都会有收获的。</p>
+
+<h2 id="objective-c-runtime-">Objective-C Runtime 是开源的</h2>
+
+<p>Objective-C 是开源的，任何时候你都能从 http://opensource.apple.com. 获取。事实上查看 Objective-C 源码是我理解它是如何工作的第一种方式，在这个问题上要比读苹果的文档要好。你可以下载适合 Mac OS X 10.6.2 的 objc4-437.1.tar.gz。（译注：最新<a href="http://opensource.apple.com/tarballs/objc4/objc4-551.1.tar.gz">objc4-551.1.tar.gz</a>）</p>
+
+<h2 id="vs-">动态 vs 静态语言</h2>
+
+<p>Objective-C 是面相运行时的语言（runtime oriented language），就是说它会尽可能的把编译和链接时要执行的逻辑延迟到运行时。这就给了你很大的灵活性，你可以按需要把消息重定向给合适的对象，你甚至可以交换方法的实现，等等（译注：在 Objective-C 中调用一个对象的方法可以看成向一个对象发送消息, Method Swizzling 具体实现可以参看 <a href="https://github.com/rentzsch/jrswizzle">jrswizzle</a> ）。这就需要使用 runtime，runtime 可以做对象自省查看他们正在做的和不能做的（don’t respond to）并且合适的分发消息（译注：感兴趣的同学可以查看 NSObject 类的 – forwardingTargetForSelector: 和 – forwardInvocation: 方法。P.S. 不是 NSObject 协议！ ）。如果我们和 C 这样的语言对比。在 C 里，你从 main() 方法开始写然后就是从上到下的写逻辑了并按你写代码的顺序执行程序。一个 C 的结构体不能转发函数执行请求到其他的目标上（other targets）。很可能你的程序是这样的：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#include &amp;lt; stdio.h &amp;gt;
+int main(int argc, const char **argv[])
+{        
+    printf("Hello World!");
+    return 0;
+} 
+</code></pre>
+</div>
+
+<p>编译器解析，优化然后把优化后的代码转成汇编：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>.text
+ .align 4,0x90
+ .globl _main
+_main:
+Leh_func_begin1:
+ pushq %rbp
+Llabel1:
+ movq %rsp, %rbp
+Llabel2:
+ subq $16, %rsp
+Llabel3:
+ movq %rsi, %rax
+ movl %edi, %ecx 
+ movl %ecx, -8(%rbp)
+ movq %rax, -16(%rbp) 
+ xorb %al, %al 
+ leaq LC(%rip), %rcx 
+ movq %rcx, %rdi 
+ call _printf 
+ movl $0, -4(%rbp) 
+ movl -4(%rbp), %eax 
+ addq $16, %rsp 
+ popq %rbp 
+ ret
+Leh_func_end1: 
+ .cstring
+LC: 
+ .asciz "Hello World!"
+</code></pre>
+</div>
+
+<p>然后链接库并生成可执行程序（译注：如果你对 C 的编译链接过程还不熟悉可以参看 <a href="http://vdisk.weibo.com/s/G-kaugh74rPp">Deep C and C++</a>）。要和 Objective-C 对比的话，处理过程很相似，生成的代码依赖于是否有 Objective-C Runtime 库。当刚学 Objective-C 时，我们最先了解的(最简单的那种)是 Objective-C 中用括号包起来的代码像这样…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[self doSomethingWithVar:var1];
+</code></pre>
+</div>
+
+<p>被转换为…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>objc_msgSend(self,@selector(doSomethingWithVar:),var1);
+</code></pre>
+</div>
+
+<p>但除了这些，我们就不知道之后在运行时做了什么了。</p>
+
+<h2 id="objective-c-runtime--1">Objective-C Runtime 是什么？</h2>
+
+<p>Objective-C 的 Runtime 是一个运行时库（Runtime Library），它是一个主要使用 C 和汇编写的库，为 C 添加了面相对象的能力并创造了 Objective-C。这就是说它在类信息（Class information） 中被加载，完成所有的方法分发，方法转发，等等。Objective-C runtime 创建了所有需要的结构体，让 Objective-C 的面相对象编程变为可能。</p>
+
+<h2 id="objective-c-runtime--2">Objective-C Runtime 术语</h2>
+
+<p>更深入之前，咱们先了解点术语。Mac 和 iPhone 开发者关心的有两个 runtime：Modern Runtime（现代的 Runtime） 和 Legacy Runtime（过时的 Runtime）。<strong>Modern Runtime</strong>：覆盖所有 64 位的 Mac OS X 应用和所有 iPhone OS 的应用。 <strong>Legacy Runtime</strong>: 覆盖其他的所有应用（所有 32 位的 Mac OS X 应用） <strong>Method</strong> 有 2 种基本类型的方法。<strong>Instance Method</strong>（实例方法）：以 ‘-’ 开始，比如 -(void)doFoo; 在对象实例上操作。<strong>Class Method</strong>（类方法）：以 ‘+’ 开始，比如 +(id)alloc。方法（Methods）和 C 的函数很像，是一组代码，执行一个小的任务，如：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>- (NSString *)movieTitle
+{
+    return @"Futurama: Into the Wild Green Yonder";
+}
+</code></pre>
+</div>
+
+<p><strong>Selector</strong> 在 Objective-C 中 selector 只是一个 C 的数据结构，用于表示一个你想在一个对象上执行的 Objective-C 方法。在 runtime 中的定义像这样…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>typedef struct objc_selector  *SEL; 
+</code></pre>
+</div>
+
+<p>像这样使用…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>SEL aSel = @selector(movieTitle); 
+</code></pre>
+</div>
+
+<p><strong>Message</strong>（消息）</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[target getMovieTitleForObject:obj];
+</code></pre>
+</div>
+
+<p>消息是方括号 ‘[]’ 中的那部分，由你要向其发送消息的对象（target），你想要在上面执行的方法（method）还有你发送的参数（arguments）组成。Objective-C 的消息和 C 函数调用是不同的。事实上，你向一个对象发送消息并不意味着它会执行它。<strong>Object</strong>（对象）会检查消息的发送者，基于这点再决定是执行一个不同的方法还是转发消息到另一个目标对象上。<strong>Class</strong> 如果你查看一个类的runtime信息，你会看到这个…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>typedef struct objc_class *Class;
+typedef struct objc_object {
+    Class isa;
+} *id; 
+</code></pre>
+</div>
+
+<p>这里有几个事情。我们有一个 Objective-C 类的结构体和一个对象的结构体。objc_object 只有一个指向类的 isa 指针，就是我们说的术语 “isa pointer”（isa 指针）。这个 isa 指针是当你向对象发送消息时，Objective-C Runtime 检查一个对象并且查看它的类是什么然后开始查看它是否响应这些 selectors 所需要的一切。最后我么看到了 id 指针。默认情况下 id 指针除了告诉我们它们是 Objective-C 对象外没有其他用了。当你有一个 id 指针，然后你就可以问这个对象是什么类的，看看它是否响应一个方法，等等，然后你就可以在知道这个指针指向的是什么对象后执行更多的操作了。你可以在 LLVM/Clang 的文档中的 Block 中看到</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>struct Block_literal_1 {
+    void *isa; // initialized to &amp;amp;_NSConcreteStackBlock or &amp;amp;_NSConcreteGlobalBlock    
+    int flags;    
+    int reserved;     
+    void (*invoke)(void *, ...); 
+    struct Block_descriptor_1 { 
+        unsigned long int reserved; // NULL     
+        unsigned long int size;  // sizeof(struct Block_literal_1)
+        // optional helper functions     
+        void (*copy_helper)(void *dst, void *src);
+        void (*dispose_helper)(void *src);     
+    } *descriptor;    
+    // imported variables
+}; 
+</code></pre>
+</div>
+
+<p>Blocks 被设计为兼容 Objective-C 的 runtime，所以他们被作为对象对待，因此他们可以响应消息，比如 -retain，-release，-copy ，等等。IMP（方法实现 Method <strong>Imp</strong>lementations）</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>typedef id (*IMP)(id self,SEL _cmd,...); 
+</code></pre>
+</div>
+
+<p>IMP 是指向方法实现的函数指针，由编译器为你生成。如果你新接触 Objective-C 你现在不需要直接接触这些，但是我们将会看到，Objective-C runtime 将如何调用你的方法的。<strong>Objective-C Classes</strong>（Objective-C 类） 那么什么是 Objective-C 类？在 Objective-C 中的一个类实现看起来像这样：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="k">@interface</span> <span class="nc">MyClass</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="p">{</span>
+    <span class="c1">// vars
+</span>    <span class="n">NSInteger</span> <span class="n">counter</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="c1">// methods
+</span><span class="o">-</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">doFoo</span><span class="p">;</span>
+<span class="k">@end</span>
+</code></pre>
+</div>
+
+<p>但是 runtime 不只要追踪这些</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>#if !__OBJC2__   
+    Class super_class                        OBJC2_UNAVAILABLE;
+    const char *name                         OBJC2_UNAVAILABLE;
+    long version                             OBJC2_UNAVAILABLE;
+    long info                                OBJC2_UNAVAILABLE;
+    long instance_size                       OBJC2_UNAVAILABLE;    
+    struct objc_ivar_list *ivars             OBJC2_UNAVAILABLE;    
+    struct objc_method_list **methodLists    OBJC2_UNAVAILABLE;    
+    struct objc_cache *cache                 OBJC2_UNAVAILABLE;    
+    struct objc_protocol_*protocols          OBJC2_UNAVAILABLE;
+#endif 
+</code></pre>
+</div>
+
+<p>我们可以看到，一个类有其父类的引用，它的名字，实例变量，方法，缓存还有它遵循的协议。runtime 在响应类或实例的方法时需要这些信息。</p>
+
+<h2 id="class---class--class--nil--nil-">那么 Class 定义的是对象还是对象本身？它是如何实现的 （译注：读者需要区分 Class 和 class 是不同的，正如 Nil 和 nil 的用途是不同的）</h2>
+
+<p>是的，之前我说过 Objective-C 类也是对象，runtime 通过创建 Meta Classes 来处理这些。当你发送一个消息像这样 [NSObject alloc] 你正在向类对象发送一个消息，这个类对象需要是 MetaClass 的实例，MetaClass 也是 root meta class 的实例。当你说继承自 NSObject 时，你的类指向 NSObject 作为自己的 superclass。然而，所有的 meta class 指向 root metaclass 作为自己的 superclass。所有的 meta class 只是简单的有一个自己响应的方法列表。所以当你向一个类对象发送消息如 [NSObject alloc]，然后实际上 objc_msgSend() 会检查 meta class 看看它是否响应这个方法，如果他找到了一个方法，就在这个 Class 对象上执行（译注：class 是一个实例对象的类型，Class 是一个类（class）的类型。对于完全的 OO 来说，类也是个对象，类是类类型(MetaClass)的实例，所以类的类型描述就是 meta class）。</p>
+
+<h2 id="section">为什么我们继承自苹果的类</h2>
+
+<p>从你开始 Cocoa 开发时，那些教程就说如继承自 NSObject 然后开始写一些代码，你享受了很多继承自苹果的类所带来的便利。有一件事你从未意识到的是你的对象被设置为使用 Objective-C 的 runtime。当我们为我们的类的一个实例分配了内存，像这样…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>MyObject *object = [[MyObject alloc] init];
+</code></pre>
+</div>
+
+<p>最先执行的消息是 +alloc。如果你<a href="https://developer.apple.com/library/mac/documentation/cocoa/reference/Foundation/Classes/NSObject_Class/Reference/Reference.html">查看下文档</a>，它说“新的实例对象的 isa 实例变量被初始化为指向一个数据结构，那个数据结构描述了这个类；其他的实例变量被初始化为 0。”所以继承自苹果的类不仅仅是继承了一些重要的属性，也继承了能在内存中轻松分配内存的能力和在内存中创建满足 runtime 期望的对象结构（设置 isa 指针指向我们的类）。</p>
+
+<h2 id="class-cache-objccache-cache">那么 Class Cache 是什么？（objc_cache *cache）</h2>
+<p>当 Objective-C runtime 沿着一个对象的 isa 指针检查时，它会发现一个对象实现了许多的方法。然而你可能只调用其中一小部分的方法，也没有意义每次检查时搜索这个类的分发表（dispatch table）中的所有 selector。所以这个类实现了一个缓存，当你搜索一个类的分发表，并找到合适的 selector 后，就会把它放进缓存中。所以当 objc_msgSend() 在一个类中查找 selector 时会先查找类缓存。有个理论是，当你在一个类上调用了一个消息，你很可能之后还会调用它。所以如果我们考虑到这点，就意味着当我们有个子类继承自 NSObject 叫做 MyObject 并且运行了以下的代码</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="n">MyObject</span> <span class="o">*</span><span class="n">obj</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MyObject</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">init</span><span class="p">];</span>
+
+<span class="k">@implementation</span> <span class="nc">MyObject</span>
+<span class="k">-</span> <span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="n">init</span> <span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nf">init</span><span class="p">])</span> <span class="p">{</span>
+        <span class="p">[</span><span class="n">self</span> <span class="nf">setVarA</span><span class="p">:</span><span class="err">@”</span><span class="n">blah</span><span class="err">”</span><span class="p">];</span>    
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">@end</span>
+</code></pre>
+</div>
+
+<p>发生了以下的事：</p>
+
+<p>(1) [MyObject alloc] 首先被执行。MyObject 没有实现 alloc 方法，所以我们不能在这个类中找到 +alloc 方法，然后沿着 superclass 指针会指向 NSObject。</p>
+
+<p>(2) 我们询问 NSObject 是否响应 +alloc 方法，它可以。+alloc 检查消息的接收者类，是 MyObject，然后分配一块和我们的类同样大小的内存空间，并初始化它的 isa 指针指向 MyObject 类，我们现在有了一个实例对象，最终把类对象的 +alloc 方法加入 NSObject 的类缓存（class cache）中（lastly we put +alloc in NSObject’s class cache for the class object ）。</p>
+
+<p>(3) 到现在为止，我们发送了一个类消息，但是现在我们发送一个实例消息，只是简单的调用 -init 或者我们设计的初始化方法。当然，我们的类会响应这个方法，所以 -(id)init 加入到缓存中。（译注：要是 MyObject 实现了 init 方法，就会把 init 方法加入到 MyObject 的 class cache 中，要是没有实现，只是因为继承才有了这个方法，init 方法还是会加入到 NSObject 的 class cache 中）。</p>
+
+<p>(4) 然后 self = [super init] 被调用。super 是个 magic keyword，指向对象的父类，所以我们得到了 NSObject 并调用它的的 init 方法。这样可以确保 OOP（面相对象编程） 的继承功能正常，这个方法可以正确的初始化父类的变量，之后你（在子类中）可以初始化自己的变量，如果需要可以覆盖父类的方法。在 NSObject 的例子中，没什么重要的要做，但并不总是这样。有时要做些重要的初始化。比如…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="cp">#import &amp;lt;Foundation/Foundation.h&amp;gt; 
+</span>
+<span class="k">@interface</span> <span class="nc">MyObject</span> <span class="p">:</span> <span class="nc">NSObject</span> <span class="p">{</span>
+    <span class="n">NSString</span> <span class="o">*</span><span class="n">aString</span><span class="p">;</span>
+<span class="p">}</span> 
+    <span class="k">@property</span><span class="p">(</span><span class="n">retain</span><span class="p">)</span> <span class="n">NSString</span> <span class="o">*</span><span class="n">aString</span><span class="p">;</span> 
+
+<span class="k">@end</span>
+
+<span class="k">@implementation</span> <span class="nc">MyObject</span>
+
+<span class="k">-</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="n">init</span> 
+<span class="p">{</span> 
+    <span class="k">if</span> <span class="p">(</span><span class="n">self</span> <span class="o">=</span> <span class="p">[</span><span class="n">super</span> <span class="nf">init</span><span class="p">])</span> <span class="p">{</span>
+        <span class="p">[</span><span class="n">self</span> <span class="nf">setAString</span><span class="p">:</span><span class="nb">nil</span><span class="p">];</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">self</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="k">@synthesize</span> <span class="n">aString</span><span class="p">;</span>
+
+<span class="k">@end</span>
+
+<span class="kt">int</span> <span class="n">main</span> <span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[])</span> 
+<span class="p">{</span>
+    <span class="n">NSAutoreleasePool</span> <span class="o">*</span> <span class="n">pool</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSAutoreleasePool</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">init</span><span class="p">];</span>
+
+    <span class="n">id</span> <span class="n">obj1</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSMutableArray</span> <span class="nf">alloc</span><span class="p">];</span> 
+    <span class="n">id</span> <span class="n">obj2</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSMutableArray</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">init</span><span class="p">];</span>   
+    <span class="n">id</span> <span class="n">obj3</span> <span class="o">=</span> <span class="p">[</span><span class="n">NSArray</span> <span class="nf">alloc</span><span class="p">];</span> 
+    <span class="n">id</span> <span class="n">obj4</span> <span class="o">=</span> <span class="p">[[</span><span class="n">NSArray</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">initWithObjects</span><span class="p">:</span><span class="s">@"Hello"</span><span class="p">,</span><span class="nb">nil</span><span class="p">];</span>
+
+    <span class="n">NSLog</span><span class="p">(</span><span class="s">@"obj1 class is %@"</span><span class="p">,</span><span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">obj1</span> <span class="nf">class</span><span class="p">]));</span>
+    <span class="n">NSLog</span><span class="p">(</span><span class="s">@"obj2 class is %@"</span><span class="p">,</span><span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">obj2</span> <span class="nf">class</span><span class="p">]));</span>
+    <span class="n">NSLog</span><span class="p">(</span><span class="s">@"obj3 class is %@"</span><span class="p">,</span><span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">obj3</span> <span class="nf">class</span><span class="p">]));</span>
+    <span class="n">NSLog</span><span class="p">(</span><span class="s">@"obj4 class is %@"</span><span class="p">,</span><span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">obj4</span> <span class="nf">class</span><span class="p">]));</span>
+
+    <span class="n">id</span> <span class="n">obj5</span> <span class="o">=</span> <span class="p">[</span><span class="n">MyObject</span> <span class="nf">alloc</span><span class="p">];</span> 
+    <span class="n">id</span> <span class="n">obj6</span> <span class="o">=</span> <span class="p">[[</span><span class="n">MyObject</span> <span class="nf">alloc</span><span class="p">]</span> <span class="nf">init</span><span class="p">];</span>   
+
+    <span class="n">NSLog</span><span class="p">(</span><span class="s">@"obj5 class is %@"</span><span class="p">,</span><span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">obj5</span> <span class="nf">class</span><span class="p">]));</span>    
+    <span class="n">NSLog</span><span class="p">(</span><span class="s">@"obj6 class is %@"</span><span class="p">,</span><span class="n">NSStringFromClass</span><span class="p">([</span><span class="n">obj6</span> <span class="nf">class</span><span class="p">]));</span>   
+
+    <span class="p">[</span><span class="n">pool</span> <span class="nf">drain</span><span class="p">];</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre>
+</div>
+
+<p>现在如果你新接触 Cocoa ，我让你猜会会输出什么，你可能会说</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>NSMutableArray
+NSMutableArray 
+NSArray
+NSArray
+MyObject
+MyObject
+</code></pre>
+</div>
+
+<p>但是，实际上是</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>obj1 class is __NSPlaceholderArray
+obj2 class is NSCFArray
+obj3 class is __NSPlaceholderArray
+obj4 class is NSCFArray
+obj5 class is MyObject
+obj6 class is MyObject
+</code></pre>
+</div>
+
+<p>这是因为在 Objective-C 中 +alloc 方法可能会返回某个类的对象，然后在 -init 中返回另一个类的对象。</p>
+
+<p>（译注：感兴趣的同学可以看下这两篇文章：<a href="https://developer.apple.com/library/ios/documentation/general/conceptual/CocoaEncyclopedia/ClassClusters/ClassClusters.html">Class Clusters</a>, <a href="http://seanmurph.com/weblog/make-your-own-abstract-factory-class-cluster-in-objective-c/">Make Your Own Abstract Factory Class Cluster in Objective-C</a>, 第二篇文章需要自备小梯子。)</p>
+
+<h2 id="objcmsgsend-">那么在 objc_msgSend 中发生了什么？</h2>
+
+<p>事实上在 objc_msgSend() 中发生了许多事儿。假设我们有这样的代码…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[self printMessageWithString:@"Hello World!"];
+</code></pre>
+</div>
+
+<p>它实际上会被编译器翻译为…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>objc_msgSend(self,@selector(printMessageWithString:),@"Hello World!");
+</code></pre>
+</div>
+
+<p>我们沿着目标对象的 isa 指针查找，看看是否这个对象响应 @selector(printMessageWithString:) selector。假设我们在类的分发表或者缓存中找到了这个 selector，我们沿着函数指针并且执行它。这样 objc<em>msgSend() 就永远不会返回，它开始执行，然后沿着指向方法的指针，然后你的方法返回，这样看起来 objc</em>msgSend() 方法返回了。Bill Bumgarner 比我讲了更多 objc_msgSend() 的细节（<a href="http://www.friday.com/bbum/2009/12/18/objc_msgsend-part-1-the-road-map/">部分1</a>，<a href="http://www.friday.com/bbum/2009/12/18/objc_msgsend-tour-part-2-setting-the-stage/">部分2</a> 和 <a href="http://www.friday.com/bbum/2009/12/18/objc_msgsend-tour-part-3-the-fast-path/">部分3</a>）。</p>
+
+<p>概括下他说的，并且你已经看过了 Objective-C 的 runtime 代码…</p>
+<ol>
+	<li>检查忽略的 Selector 和短路（Short Circut）—— 显然，如果我们运行在垃圾回收机制下，我们可以忽略调用 -retain, -release, 等等。</li>
+	<li>检查 nil 对象（target）。和其他的语言不一样的是，在 Objective-C 中向 nil 发送消息是完全合法的，并且有些原因下你会愿意这么做的。假设我们有个非 nil 的对象，然后我们继续...</li>
+	<li>然后我们需要在这个类上找到 IMP，所以我们先从 class cache 中找起，如果找到了就沿着指针跳到这个函数。</li>
+	<li>如果没有在缓存中找到 IMP，然后去查找类的分发表，如果找到了，就沿着指针跳到这个函数。</li>
+	<li>如果 IMP 没有在缓存和类的分发表中找到，然后我们跳到转发机制。这意味着最终你的代码被编译器转换为 C 函数。你写的方法会像这样…</li>
+</ol>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>-(int)doComputeWithNum:(int)aNum 
+</code></pre>
+</div>
+
+<p>会被翻译为…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>int aClass_doComputeWithNum(aClass *self,SEL _cmd,int aNum) 
+</code></pre>
+</div>
+
+<p>Objective-C Runtime 通过调用（invoking）指向这些方法的函数指针调用你的方法（call your methods）。现在，我要说的是，你不能直接调用这些被翻译的方法，但是 Cocoa 框架提供了获得函数指针的方法…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>//declare C function pointer
+int (computeNum *)(id,SEL,int);
+
+//methodForSelector is COCOA &amp;amp; not ObjC Runtime
+//gets the same function pointer objc_msgSend gets
+computeNum = (int (*)(id,SEL,int))[target methodForSelector:@selector(    doComputeWithNum:)]; 
+
+//execute the C function pointer returned by the runtime
+computeNum(obj,@selector(doComputeWithNum:),aNum); 
+</code></pre>
+</div>
+
+<p>通过这种方法，你可以直接访问这个函数，并且可以在运行时直接调用，甚至可以使用这个避开 runtime 的动态特性，如果你绝对需要确保一个方法被执行。Objective-C 就是用这种途径去调用你的方法的，但是使用的是 objc_msgSend()。</p>
+
+<h2 id="objective-c-">Objective-C 消息转发</h2>
+
+<p>在 Objective-C 中向一个不知道如何响应这个方法的对象发送消息是完全合法的（甚至可能是一种潜在的设计决定）。苹果的文档中给出的一个原因是模拟多继承，Objective-C 不是原生支持的，或者你可能只是想抽象你的设计并且隐藏幕后处理这些消息的其他对象/类。这一点是 runtime 非常需要的。它是这样做的 1. Runtime 检查了你的类和所有父类的 class cache 和分发表，但是没找到指定的方法。2. Objective_C 的 Runtime 会在你的类上调用 + (BOOL) resolveInstanceMethod:(SEL)aSEL。 这就给了你一个机会去提供一个方法实现并且告诉 runtime 你已经解析了这个方法，如果它开始查找，这回就会找到这个方法。你可以像这样实现…定义一个函数…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>void fooMethod(id obj, SEL _cmd)
+{ 
+    NSLog(@"Doing Foo");
+}
+</code></pre>
+</div>
+
+<p>然后你可以像这样使用 class_addMethod() 解析它…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>+(BOOL)resolveInstanceMethod:(SEL)aSEL
+{
+    if(aSEL == @selector(doFoo:))
+    {
+            class_addMethod([self class],aSEL,(IMP)fooMethod,"v@:");
+            return YES;
+    }
+    return [super resolveInstanceMethod];
+}
+</code></pre>
+</div>
+
+<p>在 class_addMethod() 最后一部分的 “v@:” 是方法的返回和参数类型。你可以在 Runtime Guide 的 Type Encoding 章节看到完整介绍。 3. Runtime 然后调用 - (id)forwardingTargetForSelector:(SEL)aSelector。这样做是为了给你一次机会（因为我们不能解析这个方法（参见上面的 #2））引导 Objective-C runtime 到另一个可以响应这个消息的对象上，在花费昂贵的处理过程调用 - (void)forwardInvocation:(NSInvocation *)anInvocation 之前调用这个方法也是更好的。你可以像这样实现</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>- (id)forwardingTargetForSelector:(SEL)aSelector
+{
+    if(aSelector == @selector(mysteriousMethod:))
+    {        
+        return alternateObject;
+    }
+    return [super forwardingTargetForSelector:aSelector];
+}
+</code></pre>
+</div>
+
+<p>显然你不想从这个方法直接返回 self，否则可能会产生一个死循环。 4. Runtime 最后一次会尝试在目标对象上调用 - (void)forwardInvocation:(NSInvocation *)anInvocation。如果你从没看过 NSInvocation，它是 Objective-C 消息的对象形式。一旦你有了一个 NSInvocation 你可以改变这个消息的一切，包括目标对象，selector 和参数。所以你可以这样做…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>-(void)forwardInvocation:(NSInvocation *)invocation
+{  
+    SEL invSEL = invocation.selector;    
+    if([altObject respondsToSelector:invSEL]) {        
+        [invocation invokeWithTarget:altObject];    
+    } else {        
+        [self doesNotRecognizeSelector:invSEL];    
+    }
+}
+</code></pre>
+</div>
+
+<p>如果你继承自 NSObject，默认它的 - (void)forwardInvocation:(NSInvocation *)anInvocation 实现只是简单的调用 -doesNotRecognizeSelector:，你可以在最后一次机会里覆盖这个方法去做一些事情。（译注：对这块内容有兴趣的同学可以参见：<a href="http://www.cnblogs.com/biosli/p/NSObject_inherit_2.html">http://www.cnblogs.com/biosli/p/NSObject<em>inherit</em>2.html</a>）</p>
+
+<h2 id="non-fragile-ivarsmodern-runtime-ivar">Non Fragile ivars（Modern Runtime）（非脆弱的 ivar）</h2>
+
+<p>我们最近在 Modern Runtime 里得到的是 Non Fragile ivars 的概念。当编译你的类时，编译器生成了一个 ivar 布局，显示了在你的类中从哪可以访问你的 ivars，获取指向你的对象的指针，查看 ivar 与对象起始字节的偏移关系，和获取读入的变量类型的总共字节大小等一些底层的细节。所以你的 ivar 布局可能看起来像这样，左侧的数字是字节偏移量。</p>
+
+<p><img src="/images/20140316/2014031602.png" alt="2014031602" /></p>
+
+<p>我们有了 NSObject 的 ivar 布局，然后我们继承自 NSObject 去扩展它并且添加了我们自己的 ivars。在苹果发布更新前这都工作的很好，但是 Mac OS X 10.6 发布后，就成了这样</p>
+
+<p><img src="/images/20140316/2014031603.png" alt="2014031603" /></p>
+
+<p>你的自定义对象被剔除了因为我们有了一个重叠的父类。唯一可以防止这个的办法是如果苹果坚持之前的布局，如果他们这么做了，那么他们的框架就不能改进，因为他们的 ivar 布局被冻住了。在 fragile ivar 下你不得不重新编译你继承自苹果类的类来恢复兼容性。所以在非 fragile ivar 时，会发生生么？</p>
+
+<p><img src="/images/20140316/2014031604.png" alt="2014031604" /></p>
+
+<p>使用非 fragile ivars 时，编译器生成和 fragile ivars 相同的 ivar 布局。然而当 runtime 检测到一个重叠的超类时，它调整你在这个类中新增的 ivar 的偏移量，这样在子类中新增加的那部分就显示出来了。</p>
+
+<h2 id="objective-c--1">Objective-C 关联对象</h2>
+
+<p>最近在 Mac OS X 10.6 雪豹 中新引入了<strong>关联引用</strong>。Objective-C 不能动态的添加一些属性到对象上，和其他的一些原生支持这点的语言不一样。所以之前你都不得不努力为未来要增加的变量预留好空间。在 Mac OS X 10.6 中，Objective-C 的 Runtime 已经原生的支持这个功能了。如果我们想向一个已有的类添加变量，看起来像这样…</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code><span class="cp">#import &amp;lt;Cocoa/Cocoa.h&amp;gt; //Cocoa
+#include &amp;lt;objc/runtime.h&amp;gt; //objc runtime api’s 
+</span>
+<span class="k">@interface</span> <span class="nc">NSView</span> <span class="p">(</span><span class="nl">CustomAdditions</span><span class="p">)</span>
+<span class="err">@</span><span class="nc">property</span><span class="p">(</span><span class="nl">retain</span><span class="p">)</span> <span class="nc">NSImage</span> <span class="o">*</span><span class="n">customImage</span><span class="p">;</span>
+<span class="k">@end</span> 
+
+<span class="k">@implementation</span> <span class="nc">NSView</span> <span class="p">(</span><span class="nl">CustomAdditions</span><span class="p">)</span> 
+
+<span class="nc">static</span> <span class="kt">char</span> <span class="n">img_key</span><span class="p">;</span> <span class="c1">//has a unique address (identifier)
+</span>
+<span class="k">-</span> <span class="p">(</span><span class="n">NSImage</span> <span class="o">*</span><span class="p">)</span><span class="n">customImage</span>
+<span class="p">{</span>    
+    <span class="k">return</span> <span class="n">objc_getAssociatedObject</span><span class="p">(</span><span class="n">self</span><span class="p">,</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">img_key</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="o">-</span> <span class="p">(</span><span class="kt">void</span><span class="p">)</span><span class="n">setCustomImage</span><span class="o">:</span><span class="p">(</span><span class="n">NSImage</span> <span class="o">*</span><span class="p">)</span><span class="n">image</span>
+<span class="p">{</span>    
+    <span class="n">objc_setAssociatedObject</span><span class="p">(</span><span class="n">self</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="n">img_key</span><span class="p">,</span><span class="n">image</span><span class="p">,</span> <span class="n">OBJC_ASSOCIATION_RETAIN</span><span class="p">);</span>
+<span class="p">}</span> 
+
+<span class="k">@end</span>
+
+<span class="n">objc_setAssociatedObject</span><span class="p">()</span> <span class="err">的选项，你可以在</span> <span class="n">runtime</span><span class="p">.</span><span class="n">h</span> <span class="err">文件中找到。</span>
+
+<span class="cm">/* Associated Object support. */</span> 
+
+<span class="cm">/* objc_setAssociatedObject() options */</span>
+<span class="k">enum</span> <span class="p">{</span>    
+    <span class="n">OBJC_ASSOCIATION_ASSIGN</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>    
+    <span class="n">OBJC_ASSOCIATION_RETAIN_NONATOMIC</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>    
+    <span class="n">OBJC_ASSOCIATION_COPY_NONATOMIC</span> <span class="o">=</span> <span class="mi">3</span><span class="p">,</span>    
+    <span class="n">OBJC_ASSOCIATION_RETAIN</span> <span class="o">=</span> <span class="mo">01401</span><span class="p">,</span>    
+    <span class="n">OBJC_ASSOCIATION_COPY</span> <span class="o">=</span> <span class="mo">01403</span>
+<span class="p">};</span> 
+</code></pre>
+</div>
+
+<p>这些和 @property 语法中的选项意思一样。</p>
+
+<h2 id="vtable-dispatch">混和的 vTable Dispatch</h2>
+
+<p>如果你看过 modern runtime 的代码，你会发现这个（在 <a href="http://opensource.apple.com/source/objc4/objc4-437/runtime/objc-runtime-new.m">objc-runtime-new.m</a> 中）</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>/***********************************************************************
+* vtable dispatch
+* 
+* Every class gets a vtable pointer. The vtable is an array of IMPs.
+* The selectors represented in the vtable are the same for all classes
+*   (i.e. no class has a bigger or smaller vtable).
+* Each vtable index has an associated trampoline which dispatches to 
+*   the IMP at that index for the receiver class's vtable (after 
+*   checking for NULL). Dispatch fixup uses these trampolines instead 
+*   of objc_msgSend.
+* Fragility: The vtable size and list of selectors is chosen at launch 
+*   time. No compiler-generated code depends on any particular vtable 
+*   configuration, or even the use of vtable dispatch at all.
+* Memory size: If a class's vtable is identical to its superclass's 
+*   (i.e. the class overrides none of the vtable selectors), then 
+*   the class points directly to its superclass's vtable. This means 
+*   selectors to be included in the vtable should be chosen so they are 
+*   (1) frequently called, but (2) not too frequently overridden. In 
+*   particular, -dealloc is a bad choice.
+* Forwarding: If a class doesn't implement some vtable selector, that 
+*   selector's IMP is set to objc_msgSend in that class's vtable.
+* +initialize: Each class keeps the default vtable (which always 
+*   redirects to objc_msgSend) until its +initialize is completed.
+*   Otherwise, the first message to a class could be a vtable dispatch, 
+*   and the vtable trampoline doesn't include +initialize checking.
+* Changes: Categories, addMethod, and setImplementation all force vtable 
+*   reconstruction for the class and all of its subclasses, if the 
+*   vtable selectors are affected.
+**********************************************************************/ 
+</code></pre>
+</div>
+
+<p>背后的思想是，runtime 尝试在这个 vtable 中存储最近被调用的 selectors，这样就可以提升你的应用的速度，因为它使用了比 objc_msgSend 更少的指令（fewer instructions）。vtable 中保存 16 个全局最经常调用的 selectors，事实上顺着代码往下看你可以发现垃圾回收和非垃圾回收类型程序的默认 selectors …</p>
+
+  </div>
+
+  <div class="date">
+    Written on October  6, 2014
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

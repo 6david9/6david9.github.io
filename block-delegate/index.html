@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>【译】block 还是代理 – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="原文地址：http://stablekernel.com/blog/blocks-or-delegation/
+
+" />
+    <meta property="og:description" content="原文地址：http://stablekernel.com/blog/blocks-or-delegation/
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="【译】block 还是代理" />
+    <meta property="twitter:title" content="【译】block 还是代理" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>【译】block 还是代理</h1>
+
+  <div class="entry">
+    <p>原文地址：<a href="http://stablekernel.com/blog/blocks-or-delegation/">http://stablekernel.com/blog/blocks-or-delegation/</a></p>
+
+<p>上次发了一篇博客后，@saambarati 问了个非常棒的问题，简单来说：“什么时候我是用 block 代替代理用于回调？”</p>
+
+<p>这种情况下，我喜欢问我自己，“苹果会怎么做？”当然，我们知道苹果是怎么做，因为文档本身就是对设计模式使用的参考书，如果我们换个角度看待它。</p>
+
+<p>我们需要找到苹果是什么时候选择使用代理，什么时候选择使用 block 的。如果我们发现了他们的选择模式，我们就可以总结出一些规则帮助我们在自己的代码里做一些选择。</p>
+
+<p>找出苹果什么时候使用代理相当的简单：在文档中搜索 “delegate” 关键字，我们就会找出大部分使用了代理的类。</p>
+
+<p>找出什么时候苹果使用 block 有一点麻烦，因为我们不能在文档里搜索 ^ 字符。但是，苹果声明方法时的命名都很规范（顺便说下，这是一种必须掌握的基本技能）。举个例子，一个方法需要一个 NSString 作为参数就会在 selector 的名字里有 “String”，比如 initWithString:, dateFromString: 还有 startSpeakingString:。</p>
+
+<p>当一个苹果的方法需要一个 block 时，就会有 “Handler”，”Completion” 或者直接就是 “Block” 在 selector 的名字中。我们可以在文档中搜索这些关键字来生成一个在标准的 iOS API 中的好理解的 block 的使用方法列表。</p>
+
+<h3 id="section">下面是我的一些发现：</h3>
+
+<h4 id="section-1">1. 大部分的代理协议都有一些消息。</h4>
+
+<p>现在我正在看 GKMatch。我看到了一个当从另一个播放器中收到数据时的消息，当播放器改变状态，当有错误时和当一个播放器需要被重新请求时。这些都是很清楚的事件。要是苹果在这些地方使用 block，他们会有两可能：第一个，他们会为不同的事件注册一个 block。要是有人在 Objective-C 中写个类来处理这些事情，那就太讨厌了（译注：翻译的时候又学会了一个骂人的词，有兴趣的可以去看原文，原文大家意会下吧）。</p>
+
+<p>另一种可能是，只是创建一个 block 来接受所有的可能输出：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>void (^matchBlock)(GKMatchEvent eventType, Player *player, NSData *data, NSError *err);
+</code></pre>
+</div>
+
+<p>这样写既不方便也不能自我解释（译注：通过方法签名解释这个方法的意图），所以你永远也不会看着这个方法。好吧，你可能会看见这个方法，但是可能这样写看起来简单直接了，但是你却没有注意到这样写的坏处。</p>
+
+<p>因此，我们可以假设“要是一个对象有超过一个的不同的事件，使用代理。”</p>
+
+<h4 id="section-2">2. 一个对象只能有一个代理。</h4>
+
+<p>因为一个对象只能有一个代理，他只能和那个代理沟通，和其他对象就不行了。现在让我们看看 CLLocationManager。当定位到一个新的地址时，location manager 会通知一个对象（并且只是这个对象）。当然，要是我们想让不止一个对象知道这些更新，我们可能会会创建另一个 location manager。</p>
+
+<p>要是 CLLocationManager 是个单例，然后呢？要是我们不能创建另一个 CLLocationManager 的实例，我们可能需要交换代理的指针指向需要位置数据的那个对象。（或者弄个精心设计的广播系统，你，并且只有你，会理解）因此，在单例中使用代理不那么好。（译注：意指在上述方案中代码没有自我解释其意图，这样做只是实现了这个功能，但是却不是最漂亮的，可能会为后期维护这段代码的人留下大坑！）</p>
+
+<p>最好的例子就是 UIAccelerometer。在早期的 iOS 版本里，accelerometer 单例对象有一个代理，有时，我们不得不手动交换这个指针。这真 XXX ，但是在后来的版本里改了。现在，任何一个对象都可以向 CMMotionManager 附加一个 block 而不用再提供另一个对象接收这些更新。</p>
+
+<p>我们可以假设，“要是一个对象是个单例，我们不能使用代理。”</p>
+
+<h4 id="section-3">3. 一些代理方法要有返回值</h4>
+<p>要是你看一些代理方法（差不多所有的 datasource 方法），有一些需要返回值。这就意味着代理对象要询问某些东西的状态。但是 block 可以合理的维护状态或者至少是推断出这些状态，这应该是一个对象的角色。</p>
+
+<p>想想看，要是我问 block “你认为 Bob 怎么样？”，只会做两件事：向一个捕获的对象发消息询问这个对象怎么看待 Bob，或者返回一个捕获的值。要是返回这个响应对象，我们应该绕过这个 block 直接去找这个对象。要是返回了一个捕获的值，为什么不是这个对象的一个属性呢？</p>
+
+<p>由此推断“要是一个对象调用方法需要返回一些额外的信息，我们可能需要使用代理。”</p>
+
+<h4 id="vs-">4. 过程 vs. 结果</h4>
+<p>要是我们看看 NSURLConnectionDelegate 和 NSURLConnectionDataDelegate，我看到一些消息像这样“我马上要开始做这件事情”，“这就是我现在知道的”，“我已经做完这件事了”或者“上帝啊，末日来了，DEALLOC! DEALLOC! DEALLOC!”。这些消息描绘出了代理在不同阶段想要被通知的执行流程（process）。</p>
+
+<p>当我看到 handler 和 completion 方法时，我看到了一个包含响应对象（response object）的 block 和一个 error 对象。不需要这样沟通“我现在是这样，我还在干活呢”。</p>
+
+<p>因此，我们可以假设代理回调更面相过程，block 更面相结果。要是你需要在执行的不同步骤时被通知，你可能会使用代理。要是你只是想要你请求的信息（或者失败的详情），你应该使用 block。（要是你组合使用列表里的第三项，你会发现代理通过这些事件维护状态，但是许多独立的 block 不可以。）（译注：block 更适合状态无关的操作，比如被告知某些结果，block 之间是不会相互影响的。但是 delegate 更像一个生产流水线，每个回调方法是生产线上的一个处理步骤，一个回调的变动可能会引起另一个回调的变动。）</p>
+
+<p>这给我两个启发。首先是，你使用 block 处理可能会失败的请求是，你应该只使用一个 block。我看过这样的代码：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[fetcher makeRequest:^(id result) { 
+   // do something with result
+} error:^(NSError *err) {
+	// Do something with error
+}];
+</code></pre>
+</div>
+
+<p>上面那个没有下面这个可读（不谦虚的来说）：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[fetcher makeRequest:^(id result, NSError *err) {
+	 if(!err) {
+		 // handle result
+	 } else {
+		// handle error
+	 }
+}];
+</code></pre>
+</div>
+
+<p>当然，我应该补充下，要是有人这么对我说，“在 Smalltalk 里，我们使用前面那种形式，因为为什么当我们使用 对象/block 时还要使用 if 语句”或者类似的可以显示出他很聪明的问题。然后我就给他看了这个：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>[progressBar startAnimating];
+
+[fetcher makeRequest:^(id result) { 
+   [progressBar stopAnimating];
+   // do something with result
+} error:^(NSError *err) {
+   // WHY ARE YOU TYPING THIS TWICE?!（为什么你在这里输入了两次？！）
+   [progressBar stopAnimating];
+	// Do something with error
+}];
+</code></pre>
+</div>
+
+<p>我这么做是为了教育他，而他只是为了展示他有多聪明。（译注：这句让我想到了一句名言，Talk is cheap, show me your code! :] ）</p>
+
+<h4 id="section-4">5. 速度（也许吧？）</h4>
+<p>AVPlayer 在当前的播放事件改变时有个回调。者更像是个过程而不是结果，通过第 4 个推断，我们要使用代理。但是这个回调使用的是 block。我猜这是为了速度 - 因为这个 block 可能被每秒上百次的调用，消息查询可能会很慢。（译注：OC 中调用一个对象的方法，实际是向这个对象发消息，要是这个对象可以处理这个消息，它就是响应者，要是不能处理这个消息，它也有一次处理这个消息的机会。）</p>
+
+<h4 id="section-5">当有疑惑时，查文档。</h4>
+
+<p>I honestly could not think of a good summation header, so you’ve been stuck with this one. (Also, I just sat down to eat my lunch and it seemed like a Five Guys burger was more important than being clever.) This post should give you some good guidelines for implementing callbacks in your own classes. If your case isn’t covered, I bet finding a similar class in the iOS API will answer your question. And if you are doing something so radical that no one has done it before, try both and see what works.</p>
+
+  </div>
+
+  <div class="date">
+    Written on January 19, 2014
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>

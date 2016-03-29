@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>git tag – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="git 的 tag 分为两种类型：
+
+" />
+    <meta property="og:description" content="git 的 tag 分为两种类型：
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="git tag" />
+    <meta property="twitter:title" content="git tag" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <article class="post">
+  <h1>git tag</h1>
+
+  <div class="entry">
+    <p>git 的 tag 分为两种类型：</p>
+
+<ul>
+  <li>Lightweight Tags</li>
+  <li>Annotated Tags</li>
+</ul>
+
+<h2 id="lightweight-tags">Lightweight Tags</h2>
+<p>只是保存了一个指向某次 commit 的指针。使用 git show 命令查看只有最后一次 commit 的记录信息。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ git show v1.4-lw
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon &lt;schacon@gee-mail.com&gt;
+Date:   Mon Mar 17 21:52:11 2008 -0700
+
+  changed the version number
+</code></pre>
+</div>
+
+<h2 id="annotated-tags">Annotated Tags</h2>
+<p>包含完整的全部提交记录，包含创建 tag 人的信息（用户名，邮件等），创建 tag 的时间，还有备注信息。</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ git show v1.4
+tag v1.4
+Tagger: Ben Straub &lt;ben@straub.cc&gt;
+Date:   Sat May 3 20:19:12 2014 -0700
+
+my version 1.4
+
+commit ca82a6dff817ec66f44342007202690a93763949
+Author: Scott Chacon &lt;schacon@gee-mail.com&gt;
+Date:   Mon Mar 17 21:52:11 2008 -0700
+
+	changed the version number
+</code></pre>
+</div>
+
+<h2 id="tag">如何创建 tag</h2>
+<p>创建 lightweight tag 直接用</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git tag v1.4   # v1.4 可以替换为自己制定的版本
+</code></pre>
+</div>
+
+<p>创建 annotated tag:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git tag -a v1.4 -m "my version 1.4" # 多了一个 -a 参数
+</code></pre>
+</div>
+
+<p>要是写成:</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git tag v1.4 -m "my version 1.4"
+</code></pre>
+</div>
+
+<p>虽然没有 -a 但是因为有 -m 也会隐式的创建 annotated tag。</p>
+
+<h2 id="push-tag--repo-">push tag 到远程 repo 中</h2>
+<p>默认情况下 git push 不会把 tag push 到远程 repo 中，所以需要手动提交</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git push origin v1.4
+</code></pre>
+</div>
+
+<p>要是需要一次 push 全部的 tag 到远程的 repo 可以</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>git push origin --tags
+</code></pre>
+</div>
+
+<h2 id="checkout--tag">checkout 某个 tag</h2>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ git checkout -b version2 v2.0.0
+Switched to a new branch 'version2'
+</code></pre>
+</div>
+
+<h2 id="tag-1">删除 tag</h2>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>$ git tag -d release01
+$ git push origin :refs/tags/release01
+</code></pre>
+</div>
+
+<h3 id="section">参考：</h3>
+<p>https://git-scm.com/book/en/v2/Git-Basics-Tagging</p>
+
+<p>https://confluence.atlassian.com/bitbucket/how-do-i-remove-or-delete-a-tag-from-a-git-repo-282175551.html</p>
+
+  </div>
+
+  <div class="date">
+    Written on March 10, 2016
+  </div>
+
+  
+</article>
+
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>
