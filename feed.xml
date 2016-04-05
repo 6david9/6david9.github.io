@@ -1,4 +1,55 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.2">Jekyll</generator><link href="http://blog.cocoabit.com/feed.xml" rel="self" type="application/atom+xml" /><link href="http://blog.cocoabit.com/" rel="alternate" type="text/html" /><updated>2016-03-30T00:57:33+08:00</updated><id>http://blog.cocoabit.com/</id><title>Cocoabit</title><subtitle>Less but Better!</subtitle><entry><title>git tag</title><link href="http://blog.cocoabit.com/git-tag/" rel="alternate" type="text/html" title="git tag" /><published>2016-03-10T00:00:00+08:00</published><updated>2016-03-10T00:00:00+08:00</updated><id>http://blog.cocoabit.com/git-tag</id><content type="html" xml:base="http://blog.cocoabit.com/git-tag/">&lt;p&gt;git 的 tag 分为两种类型：&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.2">Jekyll</generator><link href="http://blog.cocoabit.com/feed.xml" rel="self" type="application/atom+xml" /><link href="http://blog.cocoabit.com/" rel="alternate" type="text/html" /><updated>2016-04-05T23:18:53+08:00</updated><id>http://blog.cocoabit.com/</id><title>Cocoabit</title><subtitle>Less but Better!</subtitle><entry><title>Golang Ruby 下载速度对比测试</title><link href="http://blog.cocoabit.com/golang-ruby-download-speed/" rel="alternate" type="text/html" title="Golang Ruby 下载速度对比测试" /><published>2016-04-05T00:00:00+08:00</published><updated>2016-04-05T00:00:00+08:00</updated><id>http://blog.cocoabit.com/golang-ruby-download-speed</id><content type="html" xml:base="http://blog.cocoabit.com/golang-ruby-download-speed/">&lt;p&gt;Golang:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;package main
+
+import (
+	&quot;net/http&quot;
+	&quot;os&quot;
+	&quot;io&quot;
+)
+
+func main() {
+	resp, _ := http.Get(&quot;http://www.sina.com.cn/&quot;)
+	
+	defer resp.Body.Close()
+	io.Copy(os.Stdout, resp.Body)
+}
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;Ruby:&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;require &quot;net/http&quot;
+
+body = Net::HTTP.get(URI(&quot;http://www.sina.com.cn/&quot;))
+puts(body)
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;结果：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;go build download.go
+time ./download
+./download  0.01s user 0.01s system 21% cpu 0.089 total
+
+time go run download.go
+go run download.go  0.85s user 0.09s system 124% cpu 0.756 total
+
+time ruby download.rb
+ruby download.rb  0.07s user 0.02s system 23% cpu 0.376 total
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;
+
+&lt;p&gt;内存占用：&lt;/p&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;测试方法 ps -o rss -p `pid of process`
+4140 KB ./download
+9716 KB go run download.go
+12908 KB ruby download.rb
+&lt;/code&gt;&lt;/pre&gt;
+&lt;/div&gt;</content><summary>Golang:
+
+package main</summary></entry><entry><title>git tag</title><link href="http://blog.cocoabit.com/git-tag/" rel="alternate" type="text/html" title="git tag" /><published>2016-03-10T00:00:00+08:00</published><updated>2016-03-10T00:00:00+08:00</updated><id>http://blog.cocoabit.com/git-tag</id><content type="html" xml:base="http://blog.cocoabit.com/git-tag/">&lt;p&gt;git 的 tag 分为两种类型：&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;Lightweight Tags&lt;/li&gt;
@@ -745,23 +796,4 @@ int main()
 &lt;/div&gt;</content><summary>Content-disposition: inline; filename=foobar.pdf
 表示浏览器内嵌显示一个文件</summary></entry><entry><title>Homebrew 列出可更新的软件</title><link href="http://blog.cocoabit.com/brew-list-upgradable/" rel="alternate" type="text/html" title="Homebrew 列出可更新的软件" /><published>2015-12-12T00:00:00+08:00</published><updated>2015-12-12T00:00:00+08:00</updated><id>http://blog.cocoabit.com/brew-list-upgradable</id><content type="html" xml:base="http://blog.cocoabit.com/brew-list-upgradable/">&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;brew outdated
 &lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;</content><summary>brew outdated</summary></entry><entry><title>App installation failed</title><link href="http://blog.cocoabit.com/app-installation-failed/" rel="alternate" type="text/html" title="App installation failed" /><published>2015-12-12T00:00:00+08:00</published><updated>2015-12-12T00:00:00+08:00</updated><id>http://blog.cocoabit.com/app-installation-failed</id><content type="html" xml:base="http://blog.cocoabit.com/app-installation-failed/">&lt;p&gt;最近用 XCode 真机调试的时候出现：&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;A signed resource has been added, modified, or deleted.
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;没法安装应用到手机上，解决办法是直接删除项目 DerivedData 下的 .app 和 .appex ：&lt;/p&gt;
-
-&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;rm -rf ~/Library/Developer/Xcode/DerivedData/AppName-*/Build/Products/Debug-iphoneos/*.app
-rm -rf ~/Library/Developer/Xcode/DerivedData/AppName-*/Build/Products/Debug-iphoneos/*.appex
-&lt;/code&gt;&lt;/pre&gt;
-&lt;/div&gt;
-
-&lt;p&gt;AppName 为项目名称。&lt;/p&gt;</content><summary>最近用 XCode 真机调试的时候出现：
-
-A signed resource has been added, modified, or deleted.
-
-
-
-没法安装应用到手机上，解决办法是直接删除项目 DerivedData 下的 .app 和 .appex ：</summary></entry></feed>
+&lt;/div&gt;</content><summary>brew outdated</summary></entry></feed>
