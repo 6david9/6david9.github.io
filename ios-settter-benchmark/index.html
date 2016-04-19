@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>iOS 对象的 setter 方法性能测试 – Cocoabit – Less but Better!</title>
+
+        <meta charset="utf-8" />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1.0'>
+
+    
+    <meta name="description" content="最近在挑选 JSON 和 Object 之间相互转换的工具，对比了下老牌的 Mantle 和新秀 YYModel。
+从 YYModel 的自己的测试结果来看，在复杂转换下有 4 倍左右的速度差异。简单的 model 转化更是有约 30倍 的速度差异。
+测试结果可以在 YYModel 的主页上找到。
+
+" />
+    <meta property="og:description" content="最近在挑选 JSON 和 Object 之间相互转换的工具，对比了下老牌的 Mantle 和新秀 YYModel。
+从 YYModel 的自己的测试结果来看，在复杂转换下有 4 倍左右的速度差异。简单的 model 转化更是有约 30倍 的速度差异。
+测试结果可以在 YYModel 的主页上找到。
+
+" />
+    
+    <meta name="author" content="Cocoabit" />
+
+    
+    <meta property="og:title" content="iOS 对象的 setter 方法性能测试" />
+    <meta property="twitter:title" content="iOS 对象的 setter 方法性能测试" />
+    
+
+    <!--[if lt IE 9]>
+      <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <link rel="stylesheet" type="text/css" href="/style.css" />
+    <link rel="alternate" type="application/rss+xml" title="Cocoabit - Less but Better!" href="/feed.xml" />
+
+    <!-- Created with Jekyll Now - http://github.com/barryclark/jekyll-now -->
+  </head>
+
+  <body>
+    <div class="wrapper-masthead">
+      <div class="container">
+        <header class="masthead clearfix">
+          <a href="/" class="site-avatar"><img src="/images/blog-logo.jpg" /></a>
+
+          <div class="site-info">
+            <h1 class="site-name"><a href="/">Cocoabit</a></h1>
+            <p class="site-description">Less but Better!</p>
+          </div>
+
+          <nav>
+            <a href="/">Blog</a>
+            <a href="/about">About</a>
+          </nav>
+        </header>
+      </div>
+    </div>
+
+    <div id="main" role="main" class="container">
+      <div class="content"
+        <article class="post">
+  <h1>iOS 对象的 setter 方法性能测试</h1>
+
+  <div class="entry">
+    <p>最近在挑选 JSON 和 Object 之间相互转换的工具，对比了下老牌的 Mantle 和新秀 YYModel。<br />
+从 YYModel 的自己的测试结果来看，在复杂转换下有 4 倍左右的速度差异。简单的 model 转化更是有约 <strong>30倍</strong> 的速度差异。<br />
+测试结果可以在 <a href="https://github.com/ibireme/YYModel">YYModel</a> 的主页上找到。</p>
+
+<p>细读了下代码发现差异原因主要在赋值属性上。<br />
+Mandle 用了 KVC 的 <code class="highlighter-rouge">setValue:forKey:</code>， 而 YYModel 用了对象属性的 <code class="highlighter-rouge">Setter</code> 方法。
+这也就是最直接的速度差异。</p>
+
+<p>苹果关于 KVC 方法实现可以参看<a href="https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/KeyValueCoding/Articles/SearchImplementation.html">说明文档</a>.
+正是由于复杂的 key 查找方法才产生了如此大的速度差异。</p>
+
+<p>写了个测试的 Demo 测试下不同的赋值方法和编译器优化级别的速度：</p>
+
+<div class="highlighter-rouge"><pre class="highlight"><code>debug: [m setValue:@"hello" forKey:@"_stringValue"]: 0.000504
+-Os:   [m setValue:@"hello" forKey:@"_stringValue"]: 0.000395
+-O3:   [m setValue:@"hello" forKey:@"_stringValue"]: 0.000374
+----------------------------------------------------------------
+debug: [m setValue:@"hello" forKey:@"stringValue"]:  0.000188
+-Os:   [m setValue:@"hello" forKey:@"stringValue"]:  0.000174
+-O3:   [m setValue:@"hello" forKey:@"stringValue"]:  0.000134
+----------------------------------------------------------------
+debug: [m setStringValue:@"hello"]:                  0.000014
+-Os:   [m setStringValue:@"hello"]:                  0.000032
+-O3:   [m setStringValue:@"hello"]:                  0.000024
+----------------------------------------------------------------
+debug: m-&gt;_stringValue = @"hello":                   0.000017
+-Os:   m-&gt;_stringValue = @"hello":                   0.000023
+-O3:   m-&gt;_stringValue = @"hello":                   0.000014
+----------------------------------------------------------------
+debug: m.stringValue = @"hello":                     0.000014
+-Os:   m.stringValue = @"hello":                     0.000031
+-O3:   m.stringValue = @"hello":                     0.000023
+----------------------------------------------------------------
+debug: [m setValue:n forKey:@"_integerValue"]:       0.000393
+-Os:   [m setValue:n forKey:@"_integerValue"]:       0.000270
+-O3:   [m setValue:n forKey:@"_integerValue"]:       0.000239
+----------------------------------------------------------------
+debug: [m setValue:n forKey:@"integerValue"]:        0.000314
+-Os:   [m setValue:n forKey:@"integerValue"]:        0.000284
+-O3:   [m setValue:n forKey:@"integerValue"]:        0.000306
+----------------------------------------------------------------
+debug: [m setIntegerValue:123]:                      0.000008
+-Os:   [m setIntegerValue:123]:                      0.000005
+-O3:   [m setIntegerValue:123]:                      0.000005
+----------------------------------------------------------------
+debug: m-&gt;_integerValue = 123:                       0.000006
+-Os:   m-&gt;_integerValue = 123:                       0.000002
+-O3:   m-&gt;_integerValue = 123:                       0.000002
+----------------------------------------------------------------
+debug: m.integerValue = 123:                         0.000053
+-Os:   m.integerValue = 123:                         0.000012
+-O3:   m.integerValue = 123:                         0.000005
+----------------------------------------------------------------
+</code></pre>
+</div>
+
+<p>以上测试为运行 10000 次的结果。从测试结果来看如果 key 为 Ivar 的名字，那么最大差距约为 <strong>36 倍</strong>!
+即使是使用属性名为 key 也有 <strong>13倍</strong> 左右的速度差异。</p>
+
+<p>开启了不同的编译器优化级别，-O3 和 -Os 的部分测试速度反而要比 debug 版慢了，目前还不清楚速度下降的原因。</p>
+
+<p>测试设备为 iPhone 6, iOS 9.3.1。
+测试用例参看:<br />
+<a href="https://github.com/6david9/SetterBenchmark/blob/master/Benchmark/Benchmark/ViewController.m">https://github.com/6david9/SetterBenchmark/blob/master/Benchmark/Benchmark/ViewController.m</a></p>
+
+  </div>
+
+  <div class="date">
+    Written on 2016-04-19
+  </div>
+
+  
+<div class="comments">
+	<div id="disqus_thread"></div>
+	<script type="text/javascript">
+
+	    var disqus_shortname = 'cocoabit';
+
+	    (function() {
+	        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+	        dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+	        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+	    })();
+
+	</script>
+	<noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+
+</article>
+
+      </div>
+    </div>
+
+    <div class="wrapper-footer">
+      <div class="container">
+        <footer class="footer">
+          
+
+
+
+<a href="https://github.com/6david9"><i class="svg-icon github"></i></a>
+
+
+
+
+
+
+
+
+<a href="https://weibo.com/6david9"><i class="svg-icon weibo"></i></a>
+
+        </footer>
+      </div>
+    </div>
+
+    
+
+  </body>
+</html>
